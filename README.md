@@ -1,14 +1,28 @@
-# TrainForge SaaS Fitness Platform
-SaaS platform for personal trainers, including client management, personalized training plan creation, appointment scheduling, and progress tracking.
+# Project Name
 
-### Description
-SaaS platform for personal trainers, including client management, personalized training plan creation, appointment scheduling, and progress tracking.
+## Overview
+Briefly explain what the project does and who it is for.
 
-### Tech stack
-Python, Django, HTML, CSS Bootstrap, HTMX, MySQL, RESTful API
+## Features
+- User authentication
+- Client management
+- Appointment scheduling
+- AI-generated workout plans
+- Progress tracking
 
-### Key functionalities
--	Developed and deployed TrainForge end-to-end, covering database design, backend logic, frontend implementation, and production deployment.
--	Built core data models and CRUD functionality with Django and ORM, enabling trainers to manage client profiles, exercises, appointments, and progress records.
--	Implemented authentication and authorization, including password login, social login, and page-level access control to protect user data. 
--	Integrated AI to dynamically generate personalized weekly exercise plans for clients.
+## Tech Stack
+- Backend: Django, Python
+- Frontend: HTML, CSS, Bootstrap, HTMX
+- Database: MySQL
+- Deployment: AWS / Nginx / whatever you used
+
+## Screenshots
+Add 2–5 screenshots here.
+
+## Installation
+```bash
+git clone ...
+cd project
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py runserver
