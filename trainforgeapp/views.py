@@ -414,13 +414,11 @@ def schedule(request):
     client = Client.objects.filter(user=client_user, is_archived=False)
     appointment = Appointment.objects.filter(client__in=client, is_archived=False)
     all_app = []
-    time_slot = []
-    for j in range(8,20):
-        time_slot.append(time(j,0))
+    time_slot = [(time(hour, 0), time(hour + 1, 0)) for hour in range(8, 20)]
 
     for k in appointment:
         if k.date in current_week: 
-            all_app.append([k.client.first_name, k.client.last_name, k.date.weekday(), k.starting_time])
+            all_app.append([k.client.first_name, k.client.last_name, k.date, k.starting_time])
     
 
     return render(request, "schedule.html", {'current_week':current_week, 'time_slot':time_slot, 'all_app':all_app})
