@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+
+{% block title %}All Clients | TrainForge{% endblock %}
+
+{% block all_clients %}active{% endblock %}
+
+{% block content %}
+<div style="background: linear-gradient(135deg, #dbeafe 0%, #ccfbf1 45%, #bbf7d0 100%); min-height: 100vh;"> 
+    <div class="container">
+        <div class="row justify-content-center pt-2 pt-md-4 pt-lg-5">
+            <div class="col-12 col-md-12 col-lg-10">
+                <h1 class="text-success text-center" style="font-size: 4rem; font-family:'Times New Roman', Times, serif"><b>Our Clients</b></h1>
+                <p class="fs-5 text-dark text-center">Click a client card to view, edit, or delete client information, and schedule a one-on-one appointment. All scheduled appointments will be recorded on the Schedule page.</p>
+            </div>
+        </div>
+
+        <form method="get" class="row mb-4 justify-content-center">
+            <div class="col-12 col-md-12 col-lg-10">
+                <div class="input-group">
+                    <span class="input-group-text rounded-start-pill" id="basic-addon1">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" class="form-control" name="search" placeholder="Enter your search..." value="{{ request.GET.search }}">
+                    <button type="submit" class="btn btn-outline-success rounded-end-4">Search</button>
+                </div>
+            </div>
+        </form>
+
+        <div class="row mb-4 pe-5">
+            <div class="text-end pe-5">
+                <button class="btn btn-success bg-gradient"><i class="bi bi-plus-square-dotted"></i><a style="text-decoration: none; color: white;" href="{% url 'add_client' %}"> Add New Client</a></button>
+            </div>
+        </div>
+
+        {% if clients %}
+        <section class="container pb-3" aria-label="Clients_details_card">
+            <div class="accordion my-5">
+
+                {% for client in clients %}
+                {% if not client.is_archived %}
+                <div class="accordion-item my-3 shadow p-3 mb-5 bg-body-tertiary rounded">
+                    <!-- Header -->
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#client_{{ forloop.counter }}" aria-expanded="false" aria-controls="client_{{ forloop.counter }}">
+                            <div>
+                                <div>
+                                    <h2 class="fs-2 pt-2 pb-1 ps-4"><b>{{ client.first_name }} {{ client.last_name }}
+                                        <span role="img" aria-label="{{ client.gender }}"><i class="{{ client.gender_label }}"></i></span>  
+                                    </b></h2>
+                                    <div class="d-flex flex-wrap">
+                                        <p class="px-4"><i class="bi bi-dot"></i>Age: {{ client.age }}</p> 
+                                        <p class="px-4"><i class="bi bi-dot"></i>Training goal: {{ client.goal }}</p>
+                                        
+                                        {% if client.current_weight %}
+                                            <p class="px-4"><i class="bi bi-dot"></i>Current weight: {{ client.current_weight }}KG</p>
+                                        {% else %}
+                                            <p class="px-4"><i class="bi bi-dot"></i>Current weight: None</p>
+                                        {% endif %}
+
+                                        {% if client.target_weight %}
+                                            <p class="px-4"><i class="bi bi-dot"></i>Target weight: {{ client.target_weight }}KG</p>
+                                        {% else %}
+                                            <p class="px-4"><i class="bi bi-dot"></i>Target weight: None</p>
+                                        {% endif %}
+                                        
+                                        {% for plan in client.clientplan_set.all %}
+                                            {% if not plan.is_archived %}
+                                                <p class="px-4"><i class="bi bi-dot"></i>Plan status: {{ plan.status }}</p>
+                                            {% endif %}
+                                        {% empty %}
+                                            <p class="px-4"><i class="bi bi-dot"></i>Plan status: None</p>
+                                        {% endfor %}
+                                    </div>
+
+
+                                    {% if client.preferred_app_time_notes %}
+                                        <p class="px-4"><i class="bi bi-dot"></i>Preferred appointment time: {{ client.preferred_app_time_notes }}</p>
+                                    {% else %}
+                                        <p class="px-4"><i class="bi bi-dot"></i>Preferred appointment time: None</p>
+                                    {% endif %}
+
+
+    
+                                    
+                                    {% if client.appointment_set.all %}
+                                        {% for app in client.appointment_set.all %}
+                                            {% if not app.is_archived %}
+                                                <p class="px-4"><i class="bi bi-dot"></i>Latest appointment time: {{ app.latest_app_t }}</p>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% else %}    
+                                        <p class="px-4"><i class="bi bi-dot"></i>Latest appointment time: None</p>
+                                    {% endif %}
+
+                                    <p class="px-4 pt-1 pb-1"><i class="bi bi-dot"></i>Overall progress:</p>
+                                </div>
+                                
+                                
+                                {% for plan in client.clientplan_set.all %}
+                                    {% if not plan.is_archived %}
+                                        <div class="ms-5 mt-2 progress" role="progressbar" aria-label="" aria-valuenow="{{ plan.overall_progress }}" aria-valuemin="0" aria-valuemax="100">
+                                            <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: {{ plan.overall_progress }}%">{{ plan.overall_progress }}%</div>
+                                        </div>         
+                                    {% endif %}
+                                {% empty %}
+                                    <div class="ms-5 mt-2 progress" role="progressbar" aria-label="" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                                        <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%">No Plan</div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </button>
+                    </h2>
+
+                    <!-- Body -->
+                    <div id="client_{{ forloop.counter }}" class="accordion-collapse collapse">
+                        <div class="accordion-body">
+                            <div>
+                                <div>
+                                    <p class="px-4"><i class="bi bi-dot"></i>Preferred exercise: 
+                                        {% for plan in client.clientplan_set.all %}
+                                            {% if not plan.is_archived %}
+                                                {% for p_exercise in plan.planexercise_set.all %}
+                                                    {% if not p_exercise.is_archived %}
+                                                        {{ p_exercise.user_exercise.exercise_name_copy }} {% if not forloop.last %}, {% endif %}
+                                                    {% endif %}
+                                                {% endfor %}
+                                            {% endif %}
+                                        {% endfor %}
+                                    </p>                          
+                                    
+                                    <div class="d-flex flex-wrap">
+                                        {% for plan in client.clientplan_set.all %}
+                                            {% if not plan.is_archived %}
+                                                <p class="px-4"><i class="bi bi-dot"></i>Start date: {{ plan.start_date }}</p>
+                                                <p class="px-4"><i class="bi bi-dot"></i>End date: {{ plan.end_date }}</p>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+
+                                    {% if client.goal_description %}
+                                        <p class="px-4"><i class="bi bi-dot"></i>Training Goal: {{ client.goal_description }}</p>
+                                    {% else %}
+                                        <p class="px-4"><i class="bi bi-dot"></i>Training Goal: None</p>
+                                    {% endif %}
+                                    
+                                    <hr>
+
+
+                                    <div class="row pt-3">
+                                        {% for plan in client.clientplan_set.all %}
+                                            {% if not plan.is_archived %}
+                                                <!-- AI generative feature --> 
+                                                <div class="mb-4">{% include "partials/_note_section.html" %}</div>
+                                                <!-- Embeds the AI Plan partial into the full page -->
+
+                                                <h5 class="text-center pt-1"><b><u>Detailed exercise plans</u></b></h5>
+                                                {% for p_exercise in plan.planexercise_set.all %}
+                                                    {% if not p_exercise.is_archived %}
+                                                        <div>
+                                                            <div class="card my-2">
+                                                                <div class="card-body">
+                                                                    <h5 class="card-title"><b>Item {{ forloop.counter }}: {{ p_exercise.user_exercise.exercise_name_copy }}</b></h5>
+                                                                    <p class="card-text"><i class="bi bi-dot"></i><b>Frequency</b>: {{ p_exercise.frequency|default:"None" }}</p>
+                                                                    <p class="card-text"><i class="bi bi-dot"></i><b>Repetition</b>: {{ p_exercise.repetition|default:"None"  }}</p>
+
+                                                                    {% if p_exercise.description %}
+                                                                        <p class="card-text"><i class="bi bi-dot"></i><b>Description</b>: {{ p_exercise.description }}</p>
+                                                                    {% else %}
+                                                                        <p class="card-text"><i class="bi bi-dot"></i><b>Description</b>: None</p>
+                                                                    {% endif %}    
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            {% endif %}   
+                                        {% endfor %}
+                                    </div>
+
+                                    {% for plan in client.clientplan_set.all %}
+                                        {% if not plan.is_archived %}
+                                            {% for p_exercise in plan.planexercise_set.all %}
+                                                {% if not p_exercise.is_archived %}
+                                                    <p class="px-4 pt-4">{{ p_exercise.user_exercise.exercise_name_copy }} progress:</p>
+                                                    <div class="ms-5 mt-2 progress" role="progressbar" aria-label="" aria-valuenow="{{ p_exercise.progress|default:'0' }}" aria-valuemin="0" aria-valuemax="100">
+                                                        <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: {{ p_exercise.progress|default:'0' }}%">{{ p_exercise.progress|default:"0" }}%</div>
+                                                    </div>
+                                                {% endif %} 
+                                            {% endfor %}
+                                        {% endif %}
+                                    {% endfor %}
+                                    
+                                    <div class="row justify-content-center">
+                                        <div class="btn-group py-4" role="group" aria-label="">
+                                            <a href="{% url 'edit_client' client.pk %}" class="btn btn-outline-success">Edit</a>
+                                            <a href="{% url 'edit_appointment' client.pk %}" class="btn btn-outline-success">Manage appointment</a>
+                                            <a href="{% url 'delete_client' client.pk %}" class="btn btn-outline-success">Delete</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+            
+        </section>
+
+        {% else %}
+        <div class="row mb-4 justify-content-center text-center text-body-secondary opacity-50 pt-5">
+            <h2>No Client?</h2>
+            <h2>Let's Add a New One!</h2>
+        </div>
+        {% endif %}
+        
+
+
+    </div>
+</div>
+{% endblock %}

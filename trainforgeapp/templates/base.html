@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}TrainForge Web title{% endblock %}</title>
+    <!-- This is the main stylesheet for Bootstrap. It includes all the CSS necessary for Bootstrap's components and utilities to work. -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <!-- Include Bootstrap Icons -->
+    <!-- This link imports the Bootstrap Icons library, which provides a wide range of SVG icons for use in your projects. -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Include Bootstrap Icons -->
+    <!-- This link imports the Bootstrap Icons library, which provides a wide range of SVG icons for use in your projects. -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  </head>
+  <body class="d-flex flex-column min-vh-100" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-success bg-gradient">
+            <div class="container">
+                <a class="navbar-brand" href="{% url 'all_clients' %}"><b>TrainForge</b></a>
+                <a class="navbar-brand fw-semibold px-5 mx-2" href="#"> Hi, {{ user.first_name }} {{ user.last_name }}👋</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto text-center">
+                        <li class="nav-item px-4">
+                            <a class="nav-link {% block add_client %}{% endblock %}" href="{% url 'add_client' %}">Add Client</a>
+                        </li>
+                        <li class="nav-item px-4">
+                            <a class="nav-link {% block all_clients %}{% endblock %}" href="{% url 'all_clients' %}">All Clients</a>
+                        </li>
+                        <li class="nav-item px-4">
+                            <a class="nav-link {% block exercise_item %}{% endblock %}" href="{% url 'exercise_item' %}">Exercise Item</a>
+                        </li>
+                        <li class="nav-item px-4">
+                            <a class="nav-link {% block schedule %}{% endblock %}" href="{% url 'schedule' %}">Schedule</a>
+                        </li>
+
+                        <li class="nav-item px-4">
+                            <form method="post" action="{% url 'logout' %}" class="d-inline m-0">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-light">Logout</button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+  
+    <main class="flex-grow-1">
+        <div class="position-fixed top-0 start-50 translate-middle-x mt-4" style="z-index: 2000; width: 90%; max-width: 600px;">
+        {% if messages %}
+            <div class="container mt-3">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        </div>
+
+        {% block content %}{% endblock %}
+    </main>
+  
+    <footer class="bg-success bg-gradient text-light py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <p>&copy; 2026 TrainForge. All rights reserved.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <a href="#" class="text-light me-3">Privacy Policy</a>
+                    <a href="#" class="text-light">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <!-- This script includes all of Bootstrap's JavaScript-based components and behaviors, such as modal windows, dropdowns, and tooltips.  -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/htmx.org@2.0.8"></script>
+</body>
+</html>

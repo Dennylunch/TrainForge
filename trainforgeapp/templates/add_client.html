@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Add Client | TrainForge{% endblock %}
+
+{% block add_client %}active{% endblock %}
+
+{% block content %}
+    <div style="background: linear-gradient(135deg, #166534 0%, #16a34a 55%, #f59e0b 100%); min-height: 100vh;">  
+        <section>
+                <div class="container">
+                    <div class="row justify-content-center">
+                        <div class="col-12 col-md-8 col-lg-6 pb-4">
+                            <div class="bg-light px-5 pt-5 pb-3 mt-3 rounded-4">
+                                <h1 class="text-center mb-4 text-success"><b>Personal Profile</b></h1>
+                                <form method="post">
+                                    {% csrf_token %}
+
+                                    <section class="row justify-content-center">
+                                        <h5 class="text-center"><u>Client Details</u></h5>
+                                        <div class="mt-3">
+                                            <label for="gender" class="form-label mb-1">Gender</label>
+                                            <select class="form-select mb-3" id="gender" name="gender">
+                                                <option selected disabled value="">Choose one</option>
+                                                <option value="Male" {% if client.gender == "Male" %}selected{% endif %}>Male</option>
+                                                <option value="Female"  {% if client.gender == "Female" %}selected{% endif %}>Female</option>
+                                                <option value="Other"  {% if client.gender == "Other" %}selected{% endif %}>Other</option>
+                                                <option value="Not to say"  {% if client.gender == "Not to say" %}selected{% endif %}>Prefer not to say</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="mb-3 col-lg-6 col-md-6">
+                                            <label for="fname" class="form-label">First name<span class="text-danger"> *</span></label>
+                                            <input type="text" class="form-control" id="fname" name="first_name" value="{{ client.first_name|default:'' }}" required>
+                                        </div>
+                                        <div class="mb-3 col-lg-6 col-md-6">
+                                            <label for="lname" class="form-label">Last name<span class="text-danger"> *</span></label>
+                                            <input type="text" class="form-control" id="lname" name="last_name" value="{{ client.last_name|default:'' }}" required>
+                                        </div>
+                                        <div class="mb-3 col-lg-6 col-md-6">
+                                            <label for="dob" class="form-label">Date of birth</label>
+                                            <input type="date" class="form-control" id="dob" name="date_of_birth" value="{{ client.date_of_birth|date:'Y-m-d' }}">
+                                        </div>
+                                        <div class="mb-3 col-lg-6 col-md-6">
+                                            <label for="email" class="form-label">Email<span class="text-danger"> *</span></label>
+                                            <input type="email" class="form-control" id="email" name="email" value="{{ client.email|default:'' }}" required>
+                                        </div>
+                                        <div class="mb-3 col-lg-6 col-md-6">
+                                            <label for="cw" class="form-label">Current weight</label>
+                                            <div class="input-group">
+                                                <input type="number" class="form-control" id="cw" aria-describedby="cw_unit" name="current_weight" min="0" step="1" value="{{ client.current_weight|default:'' }}">
+                                                <span class="input-group-text" id="cw_unit">kg</span>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3 col-lg-6 col-md-6">
+                                            <label for="tw" class="form-label">Target weight</label>
+                                            <div class="input-group">
+                                                <input type="number" class="form-control" id="tw" aria-describedby="tw_unit" name="target_weight" min="0" step="1" value="{{ client.target_weight|default:'' }}">
+                                                <span class="input-group-text" id="tw_unit">kg</span>
+                                            </div>
+                                        </div>
+                                    </section>
+
+                                        <!-- Training Plan -->
+                                    <section class="row justify-content-center">
+                                        <hr class="mt-3">
+                                        <h5 class="text-center"><u>Training Plans</u></h5>
+                                        <div class="mt-3">
+                                            <label for="start_date" class="form-label">Start date<span class="text-danger"> *</span></label>
+                                            <input type="date" class="form-control mb-3" id="start_date" name="start_date" value="{{ client_plan.start_date|date:'Y-m-d' }}" required>
+                                        </div>
+                                        <div>
+                                            <label for="end_date" class="form-label">End date<span class="text-danger"> *</span></label>
+                                            <input type="date" class="form-control mb-3" id="end_date" name="end_date" value="{{ client_plan.end_date|date:'Y-m-d' }}" required>
+                                        </div>
+
+                                        <div>
+                                            <label for="goal" class="form-label mb-1">Training Goal<span class="text-danger"> *</span></label>
+                                            <select class="form-select mb-3" id="goal" name="goal" required>
+                                                <option selected disabled value="">Choose one</option>
+                                                <option value="Lose weight" {% if client.goal == "Lose weight" %}selected{% endif %}>Lose weight</option>
+                                                <option value="Build Muscle" {% if client.goal == "Build Muscle" %}selected{% endif %}>Build Muscle</option>
+                                                <option value="Improve fitness" {% if client.goal == "Improve fitness" %}selected{% endif %}>Improve fitness</option>
+                                                <option value="Build strength" {% if client.goal == "Build strength" %}selected{% endif %}>Build strength</option>
+                                                <option value="Endurance Training" {% if client.goal == "Endurance Training" %}selected{% endif %}>Endurance Training</option>
+                                                <option value="Other" {% if client.goal == "Other" %}selected{% endif %}>Other</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label for="goal_description" class="form-label mb-1">Goal description</label>
+                                            <textarea class="form-control mb-2" id="goal_description" style="height: 100px" name="goal_description">{{ client.goal_description|default:'' }}</textarea>
+                                        </div>
+                                        
+                                        {% if not client%}
+                                        <div>
+                                            <label class="form-label pt-2 mb-1">Select preferred exercises<span class="text-danger"> *</span></label><br>
+                                            <label>(Select at least 1 exercise you plan to do)</label>
+                                            <div class="row justify-content-center py-3">
+                                                <div class="btn-group-vertical col-6" role="group" aria-label="Training exercise selection group">
+                                                    {% for i in all_exercise_items %}
+                                                        {% if forloop.counter0|divisibleby:2  %}
+                                                            <input type="checkbox" class="btn-check" id="exercise_{{forloop.counter0}}" autocomplete="off" name="preferred_ex" value="{{ i.exercise_name_copy }}">
+                                                            <label class="btn btn-outline-success form-label" for="exercise_{{forloop.counter0}}">{{ i.exercise_name_copy }}</label>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </div>
+
+                                                <div class="btn-group-vertical col-6" role="group" aria-label="Training exercise selection group">
+                                                    {% for i in all_exercise_items %}
+                                                        {% if not forloop.counter0|divisibleby:2  %}
+                                                            <input type="checkbox" class="btn-check" id="exercise_{{forloop.counter0}}" autocomplete="off" name="preferred_ex" value="{{ i.exercise_name_copy }}">
+                                                            <label class="btn btn-outline-success form-label" for="exercise_{{forloop.counter0}}">{{ i.exercise_name_copy }}</label>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </div>
+                                                
+                                                <div class="pt-3 text-center">
+                                                    <h6>Want to create a custom exercise?</h6>
+                                                    <h6>Click <a href="{% url 'exercise_item' %}" class="text-success">here</a> to add one.</h6>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+
+                                        <div class="text-center pt-2">  
+                                            <button type="submit" class="btn btn-success px-4">Customize Training Plan</button>
+                                        </div>
+                                    </section>
+                                </form>
+                            </div>
+                        </div>
+
+                        
+                    </div>
+                </div>
+            </section>
+    </div>  
+{% endblock %}

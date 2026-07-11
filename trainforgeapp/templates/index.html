@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TrainForge Landing Page</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  </head>
+
+  <body>
+    <main>
+      <div class="pt-1" style="background-image: url(https://img.freepik.com/free-photo/view-gym-room-training-sports_23-2151699497.jpg?semt=ais_hybrid&w=740&q=80); min-height: 80vh; background-repeat: no-repeat; background-size: cover; background-position: center;">
+        <section class="p-5 mt-5">
+          <div class="container">
+            <div class="row justify-content-center">
+                <h1 class="text-light text-center pt-4 display-1 col-12 col-md-8 col-lg-8" style="font-family:Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;">All-in-one fitness coaching platform</h1>
+                <h2 class="text-light text-center pt-4 col-12 col-md-10 col-lg-12" style="font-family: 'Times New Roman', Times, serif;"><i>Manage clients, create training plans, book appointments, and monitor progress with ease.</i></h2>
+                <a role="button" href="{% url 'login' %}" class="btn btn-success mt-4 rounded-pill border-success-subtle border-3 col-12" style="width: 200px;" >Get Started</a>   
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <section class="py-5">
+            <div class="container">
+                <h2 class="text-center mb-4 text-success"><b><u>Key Features</u></b></h2>
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <img src="https://img.freepik.com/free-vector/business-consultant-puzzled-man-working-laptop_1262-20610.jpg?semt=ais_hybrid&w=740&q=80" alt="Client Management Conceptual Figure" style="height: 350px;">
+                            <div class="card-body">
+                                <h4 class="card-title">Client Management</h4>
+                                <p class="card-text">Add, view, and manage client profiles with ease and better organisation.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <img src="https://www.aihr.com/wp-content/uploads/employee-training-plan-template-cover-image.png" alt="Personalised Training Plans Conceptual Figure" style="height: 350px;">
+                            <div class="card-body">
+                                <h4 class="card-title">Personalised Training Plans</h4>
+                                <p class="card-text">Create tailored exercise plans with descriptions and repetitions for each client.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <img src="https://img.freepik.com/free-vector/hand-drawn-business-planning-concept_52683-75940.jpg?t=st=1776912407~exp=1776916007~hmac=9e4aa1870a17fb87ec216938752cfe2b4097f44e557346d3e14e52513fc165fa&w=2000" alt="Appointment Scheduling Conceptual Figure" style="height: 350px;">
+                            <div class="card-body">
+                                <h4 class="card-title">Appointment Scheduling</h4>
+                                <p class="card-text">Book appointments and view them in the weekly calendar.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <img src="https://cdn.vectorstock.com/i/500p/96/49/fitness-app-dashboard-vector-61739649.jpg" alt="Progress Tracking Conceptual Figure" style="height: 350px;">
+                            <div class="card-body">
+                                <h4 class="card-title">Progress Tracking</h4>
+                                <p class="card-text">Track and monitor progress for each exercise for clients.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        
+    </main>
+
+
+
+
+    <!-- This script includes all of Bootstrap's JavaScript-based components and behaviors, such as modal windows, dropdowns, and tooltips.  -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+  </body>
+</html>

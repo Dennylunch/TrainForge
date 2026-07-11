@@ -1,0 +1,18 @@
+<div id="note-section-{{client.id}}">
+  <h5 class="px-4"><b>Weekly Training Plan</b></h5>
+  <blockquote class="blockquote">
+    <h5 class="mb-0 px-4">{{ plan.weekly_notes|default:"No training plan yet." }}</h5>
+  </blockquote>
+  <button class="btn btn-success btn-sm mx-4"
+          hx-post="{% url 'suggest_ai_note' client_id=client.id %}"
+          hx-target="#note-suggestions-{{client.id}}"
+          hx-swap="innerHTML"
+          hx-indicator="#note-spinner-{{client.id}}">
+    <i class="bi bi-stars"></i> Generate AI Weekly Training Plan
+  </button>
+  <span id="note-spinner-{{client.id}}" class="htmx-indicator">
+    <span class="spinner-border spinner-border-sm" role="status"></span>
+    Generating suggestions...
+  </span>
+  <div id="note-suggestions-{{client.id}}" class="mt-3"></div>
+</div>

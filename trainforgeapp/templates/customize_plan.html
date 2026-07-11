@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Customize Plan | TrainForge{% endblock %}
+
+{% block content %}
+    
+            
+    <div style="background: linear-gradient(135deg, #166534 0%, #16a34a 55%, #f59e0b 100%); min-height: 100vh;"> 
+        <section>
+                <div class="container">
+                    <div class="row justify-content-center">
+                        <div class="col-12 col-md-8 col-lg-6">
+                            <div class="bg-light px-5 pt-5 pb-3 mt-3 rounded-4">
+                                <h1 class="text-center mb-4 text-success"><b>Customize Training Plan</b></h1>
+
+                                <div class="row justify-content-center">
+                                    <div class="text-center pt-2">
+                                        <a href="{% url 'suggest_ai_plan_customization' client.pk %}" class="btn btn-success btn-sm px-4 mb-4">
+                                            <i class="bi bi-stars"></i> Generate AI Training Suggestions
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <form method="post" action="{% url 'customize_plan' client.pk %}">
+                                    <!-- action: 无论当前浏览器在哪个 URL，都把这个表单提交给 customize_plan --> 
+                                    <!-- 如果没有action 当点击AI按钮后 url发生改变 就不会执行 customize_plan view fxn --> 
+                                    {% csrf_token %}
+                                    <div class="row justify-content-center">
+
+                                        {% for i in plan_exercise %}
+                                        <h5 class="text-center pb-2"><u>Exercise {{ forloop.counter }}: {{ i.user_exercise.exercise_name_copy }}</u></h5>
+
+                                        <div class="mb-3 col-lg-6 col-md-6">
+                                            <label for="frequency_{{i.id}}" class="form-label">Frequency<span class="text-danger"> *</span></label>
+                                            <input type="text" class="form-control" id="frequency_{{i.id}}" name="frequency_{{i.id}}" value="{{ i.frequency|default:'' }}" required>
+                                        </div>
+                                        <div class="mb-3 col-lg-6 col-md-6">
+                                            <label for="repetition_{{i.id}}" class="form-label">Repetition<span class="text-danger"> *</span></label>
+                                            <input type="text" class="form-control" id="repetition_{{i.id}}" name="repetition_{{i.id}}" value="{{ i.repetition|default:'' }}" required>
+                                        </div>
+                                        <div class="mb-3 col-lg-12 col-md-12">
+                                            <label for="progress_{{i.id}}" class="form-label">Progress (%)<span class="text-danger"> *</span></label>
+                                            <input type="number" class="form-control" id="progress_{{i.id}}" name="progress_{{i.id}}" min="0" max="100" placeholder="0" value="{{ i.progress|default:'0' }}" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="description_{{i.id}}" class="form-label mb-1">Description / Note</label>
+                                            <textarea class="form-control mb-2" id="description_{{i.id}}" style="height: 100px" name="description_{{i.id}}">{{ i.description|default:'' }}</textarea>
+                                        </div>
+                                        <hr class="mt-3">
+                                        {% endfor %}
+                                        
+                                        <div class="text-center pt-2">
+                                            <button type="submit" class="btn btn-success px-4">Save Plan & Schedule Appointment</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="p-2"></div>
+                    </div>
+                </div>
+            </section>
+        </div>
+{% endblock %}
+
+
+    

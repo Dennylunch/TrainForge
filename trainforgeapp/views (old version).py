@@ -1,0 +1,537 @@
+from django.shortcuts import render, get_object_or_404, redirect
+from .models import UserDetail, Client, Exercise, ClientPlan, PlanExercise, Appointment, Subscription, UserExercise
+from django.contrib.auth.models import User #built-in User model
+from django.contrib.auth import login, logout, authenticate
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+# We do not need separate login view, login view is built-in fxn from django.
+
+
+from django.core.paginator import Paginator
+from django.db.models import Q
+from .forms import ClientDetailForm, ClientPlanForm, AppClientDetailForm, AppointmentForm, UserExerciseForm
+
+
+from django.utils import timezone
+from datetime import time, timedelta
+# timezone: The current date and time of the default region
+# timedelta: Perform addition or subtraction operations between dates or times
+# time: A specific time of day
+
+
+from typing import List
+from pydantic import BaseModel, Field
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import PromptTemplate
+from langchain_core.output_parsers import JsonOutputParser
+from django.conf import settings
+import markdown
+from django.utils.safestring import mark_safe
+
+class AINoteSuggestions(BaseModel):
+    # This defines a list of strings
+    suggestions: List[str] = Field(description="List of AI-generated weekly training notes alternatives")
+
+
+
+def index(request):
+    return render(request, "index.html")
+
+def signup(request):
+    if request.method == 'POST':
+        fname = request.POST.get('userfn')
+        lname = request.POST.get('userln')
+        email = request.POST.get('user_email')
+        pw = request.POST.get('user_pw')
+        c_pw = request.POST.get('user_con_pw')
+        terms = request.POST.get('terms_agree')
+
+        if User.objects.filter(username=email).exists():
+            messages.error(request, 'This email address already registered.')
+            return render(request, 'registration/signup.html')
+        
+        if pw != c_pw:
+            messages.error(request, 'Passwords do not match.')
+            return render(request, 'registration/signup.html')
+
+        if not terms:
+            messages.error(request, 'You must agree to the terms and conditions.')
+            return render(request, 'registration/signup.html')
+        
+        user = User.objects.create_user(
+            password=pw,
+            is_superuser=0,
+            username=email,
+            first_name=fname,
+            last_name=lname,
+            email=email,
+            is_staff=0,
+            is_active=1,
+        )
+
+        user_detail = UserDetail.objects.create(
+            user=user,
+            role='trainer',
+            is_term_accepted=True,
+        )
+
+        Subscription.objects.create(
+            user=user_detail
+        )
+
+        # Initialize UserExercise
+        exercise_item = Exercise.objects.all()
+        for i in exercise_item:
+            UserExercise.objects.create(
+                exercise=i,
+                user=user_detail,
+                exercise_name_copy=i.name)
+       
+        return redirect('login')
+        
+    return render(request, "registration/signup.html")
+
+
+@login_required
+def all_clients(request):
+    user_details = get_object_or_404(UserDetail, user=request.user, role='trainer')
+    user_info = user_details.user
+
+    clients = Client.objects.filter(user=user_details, is_archived=False)
+    client_plans = ClientPlan.objects.filter(client__in=clients, is_archived=False) # 'a__in=b' is same as 'a in []'  
+    
+    user_exercises = UserExercise.objects.filter(user=user_details)
+    plan_exercises = PlanExercise.objects.filter(client_plan__in=client_plans, user_exercise__in=user_exercises, is_archived=False) 
+    
+    appointment = Appointment.objects.filter(client__in=clients, is_archived=False) 
+
+    # Archive the unavailable appointment
+    today_date = timezone.localdate()
+    for i in appointment:
+        if i.date < today_date:
+            i.is_archived = True
+            i.save()
+
+    # searching
+    search_query = request.GET.get("search", "")
+    if search_query:
+        clients = clients.filter(
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query)
+        )
+
+    context = {
+        "user_details": user_details,
+        "user_info": user_info,
+        "clients": clients,
+        "client_plans": client_plans,
+        "appointment": appointment,
+        "user_exercises": user_exercises,
+        "plan_exercises": plan_exercises,
+    }
+    return render(request, "all_clients.html", context)
+
+
+
+@login_required
+def delete_client(request, pk):
+    client_user = get_object_or_404(UserDetail, user=request.user, role='trainer')
+    client = get_object_or_404(Client, pk=pk, user=client_user)
+    client_plan = get_object_or_404(ClientPlan, client=client, is_archived=False)  # find 1 instance only
+    plan_exercise = PlanExercise.objects.filter(client_plan=client_plan, is_archived=False) # find 1 more instances
+    appointment = Appointment.objects.filter(client=client, is_archived=False)
+
+    if request.method == "POST":
+        for i in appointment:
+            i.is_archived = True
+            i.save()
+        for j in plan_exercise:
+            j.is_archived = True
+            j.save()
+        client_plan.is_archived = True
+        client_plan.save()
+        client.is_archived = True
+        client.save()
+
+        messages.success(request, "The client have been deleted successfully.")
+        return redirect("all_clients")
+    
+    return render(request, "client_delete.html", {"client": client})
+
+
+
+@login_required
+def add_client(request):
+    client_user = get_object_or_404(UserDetail, user=request.user, role='trainer')
+    all_exercise_items = UserExercise.objects.filter(user=client_user, is_archived=False)
+
+    if request.method == "POST":
+        client_detail_form = ClientDetailForm(request.POST)
+        client_plan_form = ClientPlanForm(request.POST)
+        preferred_exercise = request.POST.getlist("preferred_ex")
+
+        if not preferred_exercise:
+            messages.error(request, 'You must select at least 1 exercise you plan to do.')
+        else:
+            if client_detail_form.is_valid() and client_plan_form.is_valid():
+                client_detail = client_detail_form.save(commit=False) # do not store in db for now
+                client_detail.user = client_user
+                client_detail.save()
+
+                client_plan = client_plan_form.save(commit=False)
+                client_plan.client = client_detail
+                client_plan.save()
+
+                for i in preferred_exercise:
+                    user_exercise = get_object_or_404(UserExercise, user=client_user, exercise_name_copy=i)
+                    PlanExercise.objects.create(
+                        client_plan=client_plan,
+                        user_exercise=user_exercise,
+                        frequency='',
+                        repetition='',
+                        description='',
+                        progress=0)
+                
+                messages.success(request, "Client details have been created successfully.")
+                return redirect("customize_plan", pk=client_detail.pk)
+
+    else:
+        client_detail_form = ClientDetailForm()
+        client_plan_form = ClientPlanForm()
+    return render(request, "add_client.html", {"all_exercise_items":all_exercise_items, "client_detail_form": client_detail_form, "client_plan_form": client_plan_form})
+
+
+
+@login_required
+def edit_client(request, pk):
+    client_user = get_object_or_404(UserDetail, user=request.user, role='trainer')
+    client = get_object_or_404(Client, user=client_user, pk=pk)
+    client_plan = get_object_or_404(ClientPlan, client=client, is_archived=False)
+
+    if request.method == "POST":
+        client_detail_form = ClientDetailForm(request.POST, instance=client)
+        client_plan_form = ClientPlanForm(request.POST, instance=client_plan)
+
+        if client_detail_form.is_valid() and client_plan_form.is_valid():
+            client_detail_form.save()
+            client_plan_form.save()
+            messages.success(request, "Client details have been updated successfully.")
+            return redirect("customize_plan", pk=client.pk)
+    
+    else:
+        client_detail_form = ClientDetailForm(instance=client)
+        client_plan_form = ClientPlanForm(instance=client_plan)
+
+    return render(request, "add_client.html", {"client_detail_form": client_detail_form, "client_plan_form": client_plan_form, "client":client, "client_plan":client_plan })
+
+
+
+@login_required
+def customize_plan(request, pk): # create/update plan
+    client_user = get_object_or_404(UserDetail, user=request.user, role='trainer')
+    client = get_object_or_404(Client, pk=pk, user=client_user)
+    client_plan = get_object_or_404(ClientPlan, client=client, is_archived=False)  # find 1 instance only
+    plan_exercise = PlanExercise.objects.filter(client_plan=client_plan, is_archived=False) # find 1 more instances 
+
+    if request.method == "POST":
+        for i in plan_exercise:
+            i.frequency = request.POST.get(f"frequency_{i.id}", "")
+            i.repetition = request.POST.get(f"repetition_{i.id}", "")
+            i.description = request.POST.get(f"description_{i.id}", "")
+            i.progress = request.POST.get(f"progress_{i.id}", 0)
+            i.save()
+
+        messages.success(request, "Training Plan and Plan Exercise have been updated successfully.")
+        return redirect("appointment", pk=client.pk)
+
+    return render(request, "customize_plan.html", {"client": client, "client_plan": client_plan, "plan_exercise": plan_exercise})
+
+
+
+@login_required
+def appointment(request, pk):
+    client_user = get_object_or_404(UserDetail, user=request.user, role='trainer')
+    client = get_object_or_404(Client, pk=pk, user=client_user)
+    app_info = Appointment.objects.filter(client=client, is_archived=False)
+
+    if request.method == "POST":
+        app_client_detail_form = AppClientDetailForm(request.POST, instance=client) # edit
+        appointment_form = AppointmentForm(request.POST)
+
+        if app_client_detail_form.is_valid() and appointment_form.is_valid():
+            app_client_detail_form.save()
+            messages.success(request, "The client's preferred appointment time have been created/updated successfully.")
+            
+            # determine whether there is a null/none value for start/end time in actual app
+            time_slot_check = appointment_form.cleaned_data.get("starting_time")
+            date_check = appointment_form.cleaned_data.get("date")
+
+            today_date = timezone.localdate()
+            if time_slot_check and date_check:
+                if date_check < today_date:
+                    messages.error(request, "Your appointment request has been declined because the appointment date can't be earlier than today's date.")
+
+                elif not app_info:
+                    app = appointment_form.save(commit=False) 
+                    app.client = client
+                    app.save()
+                    messages.success(request, "Your appointment has been successfully scheduled.")
+                else:
+                    messages.error(request, "Your appointment request has been declined because each client is permitted only ONE active appointment.")
+
+            return redirect("all_clients")
+    
+    else:
+        app_client_detail_form = AppClientDetailForm(instance=client)
+        appointment_form = AppointmentForm()
+        
+    return render(request, "appointment.html", {'client':client, 'app_client_detail_form':app_client_detail_form, 'appointment_form':appointment_form})
+
+
+
+@login_required
+def edit_appointment(request, pk):
+    client_user = get_object_or_404(UserDetail, user=request.user, role='trainer')
+    client = get_object_or_404(Client, user=client_user, pk=pk)
+    app_info = Appointment.objects.filter(client=client, is_archived=False)
+
+    if request.method == "POST":
+        app_client_detail_form = AppClientDetailForm(request.POST, instance=client) # edit
+        appointment_form = AppointmentForm(request.POST)
+
+        if app_client_detail_form.is_valid() and appointment_form.is_valid():
+            app_client_detail_form.save()
+            messages.success(request, "The client's preferred appointment time have been created/updated successfully.")
+            
+            # determine whether there is a null/none value for start/end time in actual app
+            time_slot_check = appointment_form.cleaned_data.get("starting_time")
+            date_check = appointment_form.cleaned_data.get("date")
+
+            today_date = timezone.localdate()
+            if time_slot_check and date_check:
+                if date_check < today_date:
+                    messages.error(request, "Your appointment request has been declined because the appointment date can't be earlier than today's date.")
+
+                elif not app_info:
+                    app = appointment_form.save(commit=False) 
+                    app.client = client
+                    app.save()
+                    messages.success(request, "Your appointment has been successfully scheduled.")
+                else:
+                    messages.error(request, "Your appointment request has been declined because each client is permitted only ONE active appointment.")
+
+            return redirect("all_clients")
+    
+    else:
+        app_client_detail_form = AppClientDetailForm(instance=client)
+        appointment_form = AppointmentForm()
+
+    return render(request, "appointment.html", {'client':client, 'app_client_detail_form':app_client_detail_form, 'appointment_form':appointment_form})
+
+
+
+@login_required
+def exercise_item(request): # list and create the exercise items
+    client_user = get_object_or_404(UserDetail, user=request.user, role='trainer')
+    all_exercise_items = UserExercise.objects.filter(user=client_user, is_archived=False)
+    if request.method == "POST":
+        user_exercise_form = UserExerciseForm(request.POST)
+        if user_exercise_form.is_valid():
+            user_exercise = user_exercise_form.save(commit=False) 
+            user_exercise.user = client_user
+            user_exercise.save()
+
+            messages.success(request, "The new exercise have been created successfully.")
+            return redirect("exercise_item")
+    
+    else:
+        user_exercise_form = UserExerciseForm()
+    return render(request, "exercise_item.html", {'all_exercise_items':all_exercise_items, 'user_exercise_form':user_exercise_form})
+
+
+
+@login_required
+def edit_exercise_item(request, pk):
+    client_user = get_object_or_404(UserDetail, user=request.user, role='trainer')
+    exercise_item = get_object_or_404(UserExercise, pk=pk, user=client_user, is_archived=False)
+
+    if request.method == "POST":
+        user_exercise_form = UserExerciseForm(request.POST, instance=exercise_item)
+
+        if user_exercise_form.is_valid():
+            user_exercise_form.save()
+            messages.success(request, "Your exercise item have been updated successfully.")
+            return redirect("exercise_item")
+    
+    else:
+        user_exercise_form = UserExerciseForm(instance=exercise_item)
+
+    return render(request, "edit_exercise_item.html", {"user_exercise_form": user_exercise_form, "exercise_item":exercise_item})
+
+
+
+@login_required
+def delete_exercise_item(request, pk):
+    client_user = get_object_or_404(UserDetail, user=request.user, role='trainer')
+    exercise_item = get_object_or_404(UserExercise, pk=pk, user=client_user, is_archived=False)
+    
+    # Determine whether this item, to be deleted, is currently in use
+    plan_exercise = PlanExercise.objects.filter(user_exercise=pk, is_archived=False)
+
+    if request.method == "POST":
+
+        if not plan_exercise:
+            exercise_item.is_archived = True
+            exercise_item.save()
+            messages.success(request, "The exercise have been deleted successfully.")
+        else:
+            messages.error(request, "The deletion request was rejected")
+            messages.error(request, "This exercise cannot be deleted because it has already been selected by a client or included in an active training plan.")
+        return redirect("exercise_item")
+    
+    return render(request, "delete_exercise_item.html")
+
+
+
+@login_required
+def schedule(request):
+    # Initalize the scheduale
+    today_date = timezone.localdate()
+    today_week = today_date.weekday()
+    start_date = today_date - timedelta(days=today_week) # start date for each week is Monday by default
+    current_week = []
+
+    for i in range(7):
+        current_week.append(start_date)
+        start_date += timedelta(1)
+    
+
+    # Collect all appointment
+    client_user = get_object_or_404(UserDetail, user=request.user, role='trainer')
+    client = Client.objects.filter(user=client_user, is_archived=False)
+    appointment = Appointment.objects.filter(client__in=client, is_archived=False)
+    all_app = []
+    time_slot = []
+    for j in range(8,20):
+        time_slot.append(time(j,0))
+
+    for k in appointment:
+        if k.date in current_week: 
+            all_app.append([k.client.first_name, k.client.last_name, k.date.weekday(), k.starting_time])
+    
+
+    return render(request, "schedule.html", {'current_week':current_week, 'time_slot':time_slot, 'all_app':all_app})
+
+
+
+def additional_login_view(request):
+    if request.method == "POST":
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+
+        user = authenticate(request, username=username, password=password)
+        
+        # Authentication
+        if user is None:
+            messages.error(request, "Your email or password was incorrect.")
+            return render(request, "registration/login.html")
+
+        # Authorization
+        client_user = UserDetail.objects.filter(user=user).first()
+        # no use .first(): query a set of object (even 1 obj only) or return a empty set
+        # use .first(): query 1 object or return a none
+        if (not client_user) or (client_user.role != "trainer") or (client_user.is_archived):
+            messages.error(request, "Your account does not have permission to access the Trainforge.")
+            return render(request, "registration/login.html")
+        
+        login(request, user)
+        return redirect("all_clients")
+    return render(request, "registration/login.html")
+
+
+@login_required
+def suggest_ai_note(request, client_id):
+    client_user = get_object_or_404(UserDetail, user=request.user, role='trainer')
+    client = get_object_or_404(Client, id=client_id, user=client_user)
+    client_plan = get_object_or_404(ClientPlan, client=client, is_archived=False)
+    plan_exercises = PlanExercise.objects.filter(client_plan=client_plan, is_archived=False)
+
+    c_weight = f"Current weight: {client.current_weight}" 
+    t_weight = f"Target weight: {client.target_weight}" 
+    start_date = f"Training plan start date: {client_plan.start_date}" 
+    end_date = f"Training plan end date: {client_plan.end_date}"
+    plan_exercise_spec = "Preferred (selected) planning exercises: "
+
+    if client.goal_description:
+        training_goal = "Training goal: " + client.goal + ', ' + client.goal_description
+    else:
+        training_goal = "Training goal: " + client.goal
+
+    for i in plan_exercises:
+        plan_exercise_spec += f"exercise item: {i.user_exercise.exercise_name_copy}\n"
+        plan_exercise_spec += f"frequency: {i.frequency}\n"
+        plan_exercise_spec += f"repetition: {i.repetition}\n"
+        plan_exercise_spec += f"description: {i.description or 'not provided'}\n\n"
+
+    # Define the structured output parser using your schema
+    parser = JsonOutputParser(pydantic_object=AINoteSuggestions)
+
+    # Define the prompt
+    prompt = PromptTemplate(
+        template=(
+            "You are a professional personal trainer.\n"
+            "Your objective is to draw on your professional expertise and teaching experience to create a tailored weekly exercise plan for the following client.\n"
+            "Generate 3 training note alternatives based on the client information below.\n\n"
+            "{format_instructions}\n\n"
+            "client_information: \n"
+            "{c_weight}\n"
+            "{t_weight}\n"
+            "{start_date}\n"
+            "{end_date}\n"
+            "{plan_exercise_spec}\n"
+            "{training_goal}\n"               
+        ),
+        input_variables=["c_weight", "t_weight", "start_date", "end_date", "plan_exercise_spec", "training_goal"],
+        partial_variables={"format_instructions": parser.get_format_instructions()},
+    )
+
+    # Set up the chain
+    llm = ChatOpenAI(
+        api_key=settings.OPENAI_API_KEY,
+        model="gpt-5.4-mini",
+        temperature=0.7,
+    )
+    chain = prompt | llm | parser
+
+    try:
+        result = chain.invoke({"c_weight":c_weight , "t_weight":t_weight , "start_date":start_date , "end_date":end_date ,
+                                "plan_exercise_spec":plan_exercise_spec , "training_goal": training_goal})
+        suggestions = result["suggestions"]
+    except Exception:
+        suggestions = []
+
+    # Return ONLY the partial template — HTMX will insert it into the page
+    return render(request, "partials/_note_suggestions.html", {
+        "suggestions": suggestions,
+        "client":client,
+        "plan":client_plan,
+    })
+
+
+@login_required
+def select_ai_note(request, client_id):
+    new_note = request.POST.get("newnote")
+    client_user = get_object_or_404(UserDetail, user=request.user, role='trainer')
+    client = get_object_or_404(Client, id=client_id, user=client_user)
+    client_plan = get_object_or_404(ClientPlan, client=client, is_archived=False)
+
+    client_plan.weekly_notes = new_note
+    client_plan.save()
+
+    # Return the updated bio section — HTMX replaces the old one
+    return render(request, "partials/_note_section.html", {
+        "client": client,
+        "plan": client_plan,
+    })
+
+
