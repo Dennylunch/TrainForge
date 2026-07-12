@@ -15,7 +15,6 @@ from .forms import ClientDetailForm, ClientPlanForm, AppClientDetailForm, Appoin
 
 from django.utils import timezone
 from datetime import date, time, timedelta
-from django.views.decorators.http import require_POST
 # timezone: The current date and time of the default region
 # timedelta: Perform addition or subtraction operations between dates or times
 # time: A specific time of day
@@ -160,6 +159,7 @@ def all_clients(request):
             to_attr="schedule_appointments",
         )
     ))
+
     for client in clients:
         appointments = client.schedule_appointments
         upcoming_appointments = [
@@ -176,6 +176,8 @@ def all_clients(request):
             if upcoming_appointments
             else automatic_history[-1] if automatic_history else None
         )
+
+
 
     context = {
         "user_details": user_details,
@@ -485,8 +487,7 @@ def schedule(request):
 
 
 @login_required
-@require_POST
-def archive_appointment(request, pk):
+def delete_appointment(request, pk):
     today_date = timezone.localdate()
     trainer = get_object_or_404(UserDetail, user=request.user, role="trainer")
     appointment = get_object_or_404(
@@ -497,13 +498,19 @@ def archive_appointment(request, pk):
         is_archived=False,
         date__gte=today_date,
     )
-    appointment.is_archived = True
-    appointment.archive_source = Appointment.ARCHIVE_SOURCE_MANUAL
-    appointment.save(update_fields=["is_archived", "archive_source"])
-
-    messages.success(request, "The appointment has been archived.")
     week_start = _selected_week_start(request.GET.get("week"), today_date)
-    return redirect(f"{reverse('schedule')}?week={week_start.isoformat()}")
+
+    if request.method == "POST":
+        appointment.is_archived = True
+        appointment.archive_source = Appointment.ARCHIVE_SOURCE_MANUAL
+        appointment.save(update_fields=["is_archived", "archive_source"])
+        messages.success(request, "The appointment has been deleted.")
+        return redirect(f"{reverse('schedule')}?week={week_start.isoformat()}")
+
+    return render(request, "appointment_delete.html", {
+        "appointment": appointment,
+        "week_start": week_start,
+    })
 
 
 

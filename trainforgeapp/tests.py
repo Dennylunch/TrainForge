@@ -60,18 +60,22 @@ class AppointmentCalendarTests(TestCase):
         automatic.refresh_from_db()
         self.assertTrue(automatic.is_archived)
         self.assertEqual(automatic.archive_source, Appointment.ARCHIVE_SOURCE_AUTO)
-        self.assertContains(response, "Alex Active")
-        self.assertNotContains(response, "Mia Manual")
-        self.assertNotContains(response, "Lee Legacy")
-        self.assertNotContains(response, reverse("archive_appointment", args=[automatic.pk]))
+        self.assertContains(response, "Alex")
+        self.assertNotContains(response, "Mia")
+        self.assertNotContains(response, "Lee")
+        self.assertNotContains(response, reverse("delete_appointment", args=[automatic.pk]))
 
-    def test_manual_archive_stays_hidden_after_its_date_has_passed(self):
+    def test_manual_delete_uses_a_confirmation_page_and_stays_hidden_after_its_date_has_passed(self):
         future_date = self.today + timedelta(days=7)
         appointment = self.create_appointment(self.client_record, future_date)
+        delete_url = f"{reverse('delete_appointment', args=[appointment.pk])}?week={future_date.isoformat()}"
 
-        response = self.client.post(
-            f"{reverse('archive_appointment', args=[appointment.pk])}?week={future_date.isoformat()}"
-        )
+        response = self.client.get(delete_url)
+        self.assertTemplateUsed(response, "appointment_delete.html")
+        self.assertContains(response, "Delete appointment?")
+        self.assertContains(response, self.schedule_url(future_date))
+
+        response = self.client.post(delete_url)
 
         self.assertRedirects(response, self.schedule_url(future_date))
         appointment.refresh_from_db()
@@ -82,14 +86,14 @@ class AppointmentCalendarTests(TestCase):
         appointment.date = past_date
         appointment.save(update_fields=["date"])
         response = self.client.get(self.schedule_url(past_date))
-        self.assertNotContains(response, "Alex Active")
+        self.assertNotContains(response, "Alex")
 
-    def test_past_appointments_cannot_be_archived_manually(self):
+    def test_past_appointments_cannot_be_deleted_manually(self):
         past_appointment = self.create_appointment(self.client_record, self.today - timedelta(days=1))
-        archive_url = reverse('archive_appointment', args=[past_appointment.pk])
+        delete_url = reverse('delete_appointment', args=[past_appointment.pk])
 
-        self.assertEqual(self.client.get(archive_url).status_code, 405)
-        self.assertEqual(self.client.post(archive_url).status_code, 404)
+        self.assertEqual(self.client.get(delete_url).status_code, 404)
+        self.assertEqual(self.client.post(delete_url).status_code, 404)
         past_appointment.refresh_from_db()
         self.assertFalse(past_appointment.is_archived)
 
@@ -113,14 +117,26 @@ class AppointmentCalendarTests(TestCase):
         client_from_context = next(client for client in response.context["clients"] if client.pk == self.client_record.pk)
         self.assertEqual(client_from_context.latest_appointment.pk, past_appointment.pk)
 
-    def test_other_trainers_cannot_archive_an_appointment(self):
+    def test_other_trainers_cannot_delete_an_appointment(self):
         other_user = User.objects.create_user(username="other", password="password")
         other_trainer = UserDetail.objects.create(user=other_user, role="trainer")
         other_client = self.create_client(other_trainer, "Taylor", "Other")
         other_appointment = self.create_appointment(other_client, self.today + timedelta(days=1))
 
-        response = self.client.post(reverse('archive_appointment', args=[other_appointment.pk]))
+        response = self.client.post(reverse('delete_appointment', args=[other_appointment.pk]))
 
         self.assertEqual(response.status_code, 404)
         other_appointment.refresh_from_db()
         self.assertFalse(other_appointment.is_archived)
+
+    def test_schedule_uses_fixed_layout_without_a_javascript_delete_modal(self):
+        future_date = self.today + timedelta(days=1)
+        appointment = self.create_appointment(self.client_record, future_date)
+
+        response = self.client.get(self.schedule_url(future_date))
+
+        self.assertContains(response, "table-layout: fixed")
+        self.assertContains(response, "dropdown-menu-end")
+        self.assertContains(response, reverse("delete_appointment", args=[appointment.pk]))
+        self.assertNotContains(response, "archiveAppointmentModal")
+        self.assertNotContains(response, "archiveAppointmentForm")

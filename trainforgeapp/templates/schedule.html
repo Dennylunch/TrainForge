@@ -6,14 +6,46 @@
 {% block content %}
 <style>
     .schedule-page .appointment-chip {
+        display: inline-block;
+        max-width: 100%;
         font-size: 0.76rem;
         line-height: 1.2;
-        white-space: normal;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .schedule-page .appointment-menu {
+        max-width: 100%;
     }
 
     .schedule-page .appointment-menu .dropdown-menu {
         z-index: 1055;
-        min-width: 12rem;
+        min-width: 0;
+        width: 100%;
+    }
+
+    .schedule-page .appointment-menu .dropdown-item {
+        font-size: 0.76rem;
+        overflow: hidden;
+        padding: 0.35rem 0.5rem;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .schedule-page #schedule-calendar {
+        table-layout: fixed;
+        width: 100%;
+    }
+
+    .schedule-page #schedule-calendar .schedule-time-column {
+        width: 6.5rem;
+    }
+
+    .schedule-page #schedule-calendar th,
+    .schedule-page #schedule-calendar td {
+        height: 3.5rem;
+        vertical-align: middle;
     }
 
     @media (hover: hover) {
@@ -67,6 +99,10 @@
 
         <div class="table-responsive">
             <table id="schedule-calendar" class="table table-striped align-middle shadow p-3 mb-5 bg-body-tertiary rounded">
+                <colgroup>
+                    <col class="schedule-time-column">
+                    <col span="7">
+                </colgroup>
                 <thead>
                     <tr>
                         <th></th>
@@ -98,17 +134,11 @@
                                                     <button class="appointment-chip btn btn-success rounded-pill shadow-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                                         <i class="bi bi-calendar-check"></i> {{ appointment.client.first_name }}
                                                     </button>
-                                                    <ul class="dropdown-menu shadow border-0 text-start">
+                                                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 text-start">
                                                         <li>
-                                                            <button
-                                                                class="dropdown-item text-danger"
-                                                                type="button"
-                                                                data-bs-toggle="modal"
-                                                                data-bs-target="#archiveAppointmentModal"
-                                                                data-appointment-name="{{ appointment.client.first_name }}"
-                                                                data-archive-url="{% url 'archive_appointment' appointment.pk %}?week={{ selected_week_start|date:'Y-m-d' }}">
-                                                                <i class="bi bi-archive"></i> Delete appointment
-                                                            </button>
+                                                            <a class="dropdown-item text-danger" href="{% url 'delete_appointment' appointment.pk %}?week={{ selected_week_start|date:'Y-m-d' }}">
+                                                                <i class="bi bi-trash"></i> Delete
+                                                            </a>
                                                         </li>
                                                     </ul>
                                                 </div>
@@ -124,40 +154,4 @@
         </div>
     </div>
 </div>
-
-<div class="modal fade" id="archiveAppointmentModal" tabindex="-1" aria-labelledby="archiveAppointmentModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header">
-                <h5 class="modal-title text-danger" id="archiveAppointmentModalLabel">Delete appointment?</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form id="archiveAppointmentForm" method="post">
-                {% csrf_token %}
-                <div class="modal-body">
-                    <p class="mb-2">Are you sure you want to delete the appointment for <strong id="archiveAppointmentName"></strong>?</p>
-                    <p class="mb-0 text-body-secondary">This archives the appointment instead of permanently deleting it.</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger"><i class="bi bi-archive"></i> Delete</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const archiveModal = document.getElementById("archiveAppointmentModal");
-        const archiveForm = document.getElementById("archiveAppointmentForm");
-        const appointmentName = document.getElementById("archiveAppointmentName");
-
-        archiveModal.addEventListener("show.bs.modal", function (event) {
-            const trigger = event.relatedTarget;
-            archiveForm.action = trigger.getAttribute("data-archive-url");
-            appointmentName.textContent = trigger.getAttribute("data-appointment-name");
-        });
-    });
-</script>
 {% endblock %}
