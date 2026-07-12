@@ -48,6 +48,21 @@
         vertical-align: middle;
     }
 
+    .schedule-page #schedule-calendar .appointment-cell-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.1rem 0;
+    }
+
+    .schedule-page #schedule-calendar .appointment-cell-content > .appointment-menu,
+    .schedule-page #schedule-calendar .appointment-cell-content > .appointment-chip {
+        display: block;
+        margin: 0;
+        width: fit-content;
+    }
+
     @media (hover: hover) {
         .schedule-page .appointment-menu:hover > .dropdown-menu,
         .schedule-page .appointment-menu:focus-within > .dropdown-menu {
@@ -123,28 +138,30 @@
                             <td class="text-center text-nowrap">{{ slot.0|time:"H:i" }} &ndash; {{ slot.1|time:"H:i" }}</td>
                             {% for day in current_week %}
                                 <td class="text-center">
-                                    {% for appointment in appointments %}
-                                        {% if appointment.date == day and appointment.starting_time == slot.0 %}
-                                            {% if appointment.date < today %}
-                                                <span class="appointment-chip btn btn-outline-success rounded-pill shadow-sm disabled" aria-label="Past appointment">
-                                                    <i class="bi bi-calendar-check"></i> {{ appointment.client.first_name }}
-                                                </span>
-                                            {% else %}
-                                                <div class="dropdown d-inline-block appointment-menu">
-                                                    <button class="appointment-chip btn btn-success rounded-pill shadow-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <div class="appointment-cell-content">
+                                        {% for appointment in appointments %}
+                                            {% if appointment.date == day and appointment.starting_time == slot.0 %}
+                                                {% if appointment.date < today %}
+                                                    <span class="appointment-chip btn btn-outline-success rounded-pill shadow-sm disabled" aria-label="Past appointment">
                                                         <i class="bi bi-calendar-check"></i> {{ appointment.client.first_name }}
-                                                    </button>
-                                                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 text-start">
-                                                        <li>
-                                                            <a class="dropdown-item text-danger" href="{% url 'delete_appointment' appointment.pk %}?week={{ selected_week_start|date:'Y-m-d' }}">
-                                                                <i class="bi bi-trash"></i> Delete
-                                                            </a>
-                                                        </li>
-                                                    </ul>
-                                                </div>
+                                                    </span>
+                                                {% else %}
+                                                    <div class="dropdown appointment-menu">
+                                                        <button class="appointment-chip btn btn-success rounded-pill shadow-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                            <i class="bi bi-calendar-check"></i> {{ appointment.client.first_name }}
+                                                        </button>
+                                                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 text-start">
+                                                            <li>
+                                                                <a class="dropdown-item text-danger" href="{% url 'delete_appointment' appointment.pk %}?week={{ selected_week_start|date:'Y-m-d' }}">
+                                                                    <i class="bi bi-trash"></i> Delete
+                                                                </a>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                {% endif %}
                                             {% endif %}
-                                        {% endif %}
-                                    {% endfor %}
+                                        {% endfor %}
+                                    </div>
                                 </td>
                             {% endfor %}
                         </tr>

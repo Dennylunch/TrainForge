@@ -140,3 +140,17 @@ class AppointmentCalendarTests(TestCase):
         self.assertContains(response, reverse("delete_appointment", args=[appointment.pk]))
         self.assertNotContains(response, "archiveAppointmentModal")
         self.assertNotContains(response, "archiveAppointmentForm")
+
+    def test_multiple_appointments_stack_vertically_with_spacing(self):
+        future_date = self.today + timedelta(days=1)
+        second_client = self.create_client(self.trainer, "Blair", "Second")
+        self.create_appointment(self.client_record, future_date, hour=10)
+        self.create_appointment(second_client, future_date, hour=10)
+
+        response = self.client.get(self.schedule_url(future_date))
+
+        self.assertContains(response, "appointment-cell-content")
+        self.assertContains(response, "flex-direction: column")
+        self.assertContains(response, "gap: 0.25rem")
+        self.assertContains(response, "Alex")
+        self.assertContains(response, "Blair")
