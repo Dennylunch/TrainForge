@@ -145,7 +145,15 @@ def all_clients(request):
             Q(last_name__icontains=search_query)
         )
 
-    clients = list(clients.prefetch_related(
+    #pagination
+    paginator = Paginator(clients, 4)  # Show 4 clients per page
+    page_number = request.GET.get("page")  # Get the page number from the request
+    page_obj = paginator.get_page(page_number) # Get the clients for the current page
+
+
+
+    # Prefetch related appointments for each client to avoid N+1 queries
+    clients = list(page_obj.object_list.prefetch_related(
         Prefetch(
             "appointment_set",
             queryset=Appointment.objects.order_by("date", "starting_time", "pk"),
@@ -176,6 +184,9 @@ def all_clients(request):
         "client_plans": client_plans,
         "user_exercises": user_exercises,
         "plan_exercises": plan_exercises,
+        "page_obj": page_obj,
+        "paginator": paginator,
+        "is_paginated": page_obj.has_other_pages()
     }
     return render(request, "all_clients.html", context)
 
