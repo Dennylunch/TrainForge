@@ -4,7 +4,27 @@
 {% block schedule %}active{% endblock %}
 
 {% block content %}
-<div style="background: linear-gradient(135deg, #dbeafe 0%, #ccfbf1 45%, #bbf7d0 100%); min-height: 100vh;">
+<style>
+    .schedule-page .appointment-chip {
+        font-size: 0.76rem;
+        line-height: 1.2;
+        white-space: normal;
+    }
+
+    .schedule-page .appointment-menu .dropdown-menu {
+        z-index: 1055;
+        min-width: 12rem;
+    }
+
+    @media (hover: hover) {
+        .schedule-page .appointment-menu:hover > .dropdown-menu,
+        .schedule-page .appointment-menu:focus-within > .dropdown-menu {
+            display: block;
+        }
+    }
+</style>
+
+<div class="schedule-page" style="background: linear-gradient(135deg, #dbeafe 0%, #ccfbf1 45%, #bbf7d0 100%); min-height: 100vh;">
     <section class="py-4">
         <div class="container">
             <h1 class="text-success text-center" style="font-size: 4rem; font-family: 'Times New Roman', Times, serif;"><strong>Our Schedule</strong></h1>
@@ -14,24 +34,28 @@
                     <div class="card border border-3 rounded-4"><div class="card-body p-2"><h5 class="card-title">All appointment schedules appear in the calendar below.</h5></div></div>
                 </div>
                 <div class="col-lg-4 mb-2">
-                    <div class="card border border-3 rounded-4"><div class="card-body p-2"><h5 class="card-title">The calendar displays all appointments scheduled for the current week.</h5></div></div>
+                    <div class="card border border-3 rounded-4"><div class="card-body p-2"><h5 class="card-title">Use Previous and Next to view any week.</h5></div></div>
                 </div>
                 <div class="col-lg-4 mb-2">
-                    <div class="card border border-3 rounded-4"><div class="card-body p-2"><h5 class="card-title">Each appointment is shown in its corresponding date and time slot.</h5></div></div>
+                    <div class="card border border-3 rounded-4"><div class="card-body p-2"><h5 class="card-title">Past completed appointments remain available for reference.</h5></div></div>
                 </div>
             </div>
         </div>
     </section>
 
     <div class="container pb-5">
-        <div class="d-flex justify-content-center pb-2" aria-label="">
-            <button type="button" class="btn btn-success rounded-start-pill ms-4"><i class="bi bi-caret-left-fill"></i> Previous</button>
-            <h4 class="text-success flex-grow-1 text-center pt-2"><strong>Current Week</strong></h4>
-            <button type="button" class="btn btn-success rounded-end-pill me-4">Next <i class="bi bi-caret-right-fill"></i></button>
+        <div class="d-flex align-items-center justify-content-center pb-2" aria-label="Calendar week navigation">
+            <a class="btn btn-success rounded-start-pill ms-4" href="{% url 'schedule' %}?week={{ previous_week_start|date:'Y-m-d' }}">
+                <i class="bi bi-caret-left-fill"></i> Previous
+            </a>
+            <h4 class="text-success flex-grow-1 text-center mb-0 px-2"><strong>{{ current_week.0|date:"d M Y" }} &ndash; {{ current_week.6|date:"d M Y" }}</strong></h4>
+            <a class="btn btn-success rounded-end-pill me-4" href="{% url 'schedule' %}?week={{ next_week_start|date:'Y-m-d' }}">
+                Next <i class="bi bi-caret-right-fill"></i>
+            </a>
         </div>
 
         <div class="table-responsive">
-            <table class="table table-striped shadow p-3 mb-5 bg-body-tertiary rounded">
+            <table id="schedule-calendar" class="table table-striped align-middle shadow p-3 mb-5 bg-body-tertiary rounded">
                 <thead>
                     <tr>
                         <th></th>
@@ -49,14 +73,35 @@
                 <tbody>
                     {% for slot in time_slot %}
                         <tr>
-                            <td class="text-center">{{ slot.0|time:"H:i" }} – {{ slot.1|time:"H:i" }}</td>
+                            <td class="text-center text-nowrap">{{ slot.0|time:"H:i" }} &ndash; {{ slot.1|time:"H:i" }}</td>
                             {% for day in current_week %}
                                 <td class="text-center">
-                                    {% for appointment in all_app %}
-                                        {% if appointment.2 == day and appointment.3 == slot.0 %}
-                                            <!-- appointment.2 date 确定日历中的（在这一行中的）列 -->
-                                            <!-- appointment.3 timeslot 确定日历中 是不是这一行 -->
-                                            <div><button class="btn btn-success p-1" type="button" style="font-size: 10px;">{{ appointment.0 }} {{ appointment.1 }}</button></div>
+                                    {% for appointment in appointments %}
+                                        {% if appointment.date == day and appointment.starting_time == slot.0 %}
+                                            {% if appointment.date < today %}
+                                                <span class="appointment-chip btn btn-outline-success rounded-pill shadow-sm disabled" aria-label="Past appointment">
+                                                    <i class="bi bi-calendar-check"></i> {{ appointment.client.first_name }} {{ appointment.client.last_name }}
+                                                </span>
+                                            {% else %}
+                                                <div class="dropdown d-inline-block appointment-menu">
+                                                    <button class="appointment-chip btn btn-success rounded-pill shadow-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                        <i class="bi bi-calendar-check"></i> {{ appointment.client.first_name }} {{ appointment.client.last_name }}
+                                                    </button>
+                                                    <ul class="dropdown-menu shadow border-0 text-start">
+                                                        <li>
+                                                            <button
+                                                                class="dropdown-item text-danger"
+                                                                type="button"
+                                                                data-bs-toggle="modal"
+                                                                data-bs-target="#archiveAppointmentModal"
+                                                                data-appointment-name="{{ appointment.client.first_name }} {{ appointment.client.last_name }}"
+                                                                data-archive-url="{% url 'archive_appointment' appointment.pk %}?week={{ selected_week_start|date:'Y-m-d' }}">
+                                                                <i class="bi bi-archive"></i> Delete appointment
+                                                            </button>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            {% endif %}
                                         {% endif %}
                                     {% endfor %}
                                 </td>
@@ -68,4 +113,40 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="archiveAppointmentModal" tabindex="-1" aria-labelledby="archiveAppointmentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger" id="archiveAppointmentModalLabel">Delete appointment?</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="archiveAppointmentForm" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p class="mb-2">Are you sure you want to delete the appointment for <strong id="archiveAppointmentName"></strong>?</p>
+                    <p class="mb-0 text-body-secondary">This archives the appointment instead of permanently deleting it.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger"><i class="bi bi-archive"></i> Delete</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const archiveModal = document.getElementById("archiveAppointmentModal");
+        const archiveForm = document.getElementById("archiveAppointmentForm");
+        const appointmentName = document.getElementById("archiveAppointmentName");
+
+        archiveModal.addEventListener("show.bs.modal", function (event) {
+            const trigger = event.relatedTarget;
+            archiveForm.action = trigger.getAttribute("data-archive-url");
+            appointmentName.textContent = trigger.getAttribute("data-appointment-name");
+        });
+    });
+</script>
 {% endblock %}

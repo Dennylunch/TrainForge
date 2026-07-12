@@ -1,4 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import reverse
 from .models import UserDetail, Client, Exercise, ClientPlan, PlanExercise, Appointment, Subscription, UserExercise
 from django.contrib.auth.models import User #built-in User model
 from django.contrib.auth import login, logout, authenticate
@@ -8,12 +9,13 @@ from django.contrib.auth.decorators import login_required
 
 
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, Prefetch
 from .forms import ClientDetailForm, ClientPlanForm, AppClientDetailForm, AppointmentForm, UserExerciseForm
 
 
 from django.utils import timezone
-from datetime import time, timedelta
+from datetime import date, time, timedelta
+from django.views.decorators.http import require_POST
 # timezone: The current date and time of the default region
 # timedelta: Perform addition or subtraction operations between dates or times
 # time: A specific time of day
@@ -95,10 +97,39 @@ def signup(request):
     return render(request, "registration/signup.html")
 
 
+def _archive_past_appointments(trainer, today_date=None):
+    """Archive completed appointments while retaining their calendar history."""
+    today_date = today_date or timezone.localdate()
+    Appointment.objects.filter(
+        client__user=trainer,
+        client__is_archived=False,
+        date__lt=today_date,
+        is_archived=False,
+    ).update(
+        is_archived=True,
+        archive_source=Appointment.ARCHIVE_SOURCE_AUTO,
+    )
+
+
+def _selected_week_start(raw_week, today_date=None):
+    """Return the Monday for a supplied ISO date, falling back to this week."""
+    today_date = today_date or timezone.localdate()
+    selected_date = today_date
+    if raw_week:
+        try:
+            selected_date = date.fromisoformat(raw_week)
+        except ValueError:
+            pass
+    return selected_date - timedelta(days=selected_date.weekday())
+
+
 @login_required
 def all_clients(request):
     user_details = get_object_or_404(UserDetail, user=request.user, role='trainer')
     user_info = user_details.user
+    today_date = timezone.localdate()
+
+    _archive_past_appointments(user_details, today_date)
 
     clients = Client.objects.filter(user=user_details, is_archived=False)
     client_plans = ClientPlan.objects.filter(client__in=clients, is_archived=False) # 'a__in=b' is same as 'a in []'  
@@ -106,15 +137,6 @@ def all_clients(request):
     user_exercises = UserExercise.objects.filter(user=user_details)
     plan_exercises = PlanExercise.objects.filter(client_plan__in=client_plans, user_exercise__in=user_exercises, is_archived=False) 
     
-    appointment = Appointment.objects.filter(client__in=clients, is_archived=False) 
-
-    # Archive the unavailable appointment
-    today_date = timezone.localdate()
-    for i in appointment:
-        if i.date < today_date:
-            i.is_archived = True
-            i.save()
-
     # searching
     search_query = request.GET.get("search", "")
     if search_query:
@@ -123,12 +145,35 @@ def all_clients(request):
             Q(last_name__icontains=search_query)
         )
 
+    clients = list(clients.prefetch_related(
+        Prefetch(
+            "appointment_set",
+            queryset=Appointment.objects.order_by("date", "starting_time", "pk"),
+            to_attr="schedule_appointments",
+        )
+    ))
+    for client in clients:
+        appointments = client.schedule_appointments
+        upcoming_appointments = [
+            appointment for appointment in appointments
+            if appointment.date and appointment.date >= today_date and not appointment.is_archived
+        ]
+        automatic_history = [
+            appointment for appointment in appointments
+            if appointment.date and appointment.date < today_date
+            and appointment.archive_source == Appointment.ARCHIVE_SOURCE_AUTO
+        ]
+        client.latest_appointment = (
+            upcoming_appointments[0]
+            if upcoming_appointments
+            else automatic_history[-1] if automatic_history else None
+        )
+
     context = {
         "user_details": user_details,
         "user_info": user_info,
         "clients": clients,
         "client_plans": client_plans,
-        "appointment": appointment,
         "user_exercises": user_exercises,
         "plan_exercises": plan_exercises,
     }
@@ -147,7 +192,8 @@ def delete_client(request, pk):
     if request.method == "POST":
         for i in appointment:
             i.is_archived = True
-            i.save()
+            i.archive_source = Appointment.ARCHIVE_SOURCE_MANUAL
+            i.save(update_fields=["is_archived", "archive_source"])
         for j in plan_exercise:
             j.is_archived = True
             j.save()
@@ -255,7 +301,8 @@ def customize_plan(request, pk): # create/update plan
 def appointment(request, pk):
     client_user = get_object_or_404(UserDetail, user=request.user, role='trainer')
     client = get_object_or_404(Client, pk=pk, user=client_user)
-    app_info = Appointment.objects.filter(client=client, is_archived=False)
+    today_date = timezone.localdate()
+    app_info = Appointment.objects.filter(client=client, is_archived=False, date__gte=today_date)
 
     if request.method == "POST":
         app_client_detail_form = AppClientDetailForm(request.POST, instance=client) # edit
@@ -269,7 +316,6 @@ def appointment(request, pk):
             time_slot_check = appointment_form.cleaned_data.get("starting_time")
             date_check = appointment_form.cleaned_data.get("date")
 
-            today_date = timezone.localdate()
             if time_slot_check and date_check:
                 if date_check < today_date:
                     messages.error(request, "Your appointment request has been declined because the appointment date can't be earlier than today's date.")
@@ -296,7 +342,8 @@ def appointment(request, pk):
 def edit_appointment(request, pk):
     client_user = get_object_or_404(UserDetail, user=request.user, role='trainer')
     client = get_object_or_404(Client, user=client_user, pk=pk)
-    app_info = Appointment.objects.filter(client=client, is_archived=False)
+    today_date = timezone.localdate()
+    app_info = Appointment.objects.filter(client=client, is_archived=False, date__gte=today_date)
 
     if request.method == "POST":
         app_client_detail_form = AppClientDetailForm(request.POST, instance=client) # edit
@@ -310,7 +357,6 @@ def edit_appointment(request, pk):
             time_slot_check = appointment_form.cleaned_data.get("starting_time")
             date_check = appointment_form.cleaned_data.get("date")
 
-            today_date = timezone.localdate()
             if time_slot_check and date_check:
                 if date_check < today_date:
                     messages.error(request, "Your appointment request has been declined because the appointment date can't be earlier than today's date.")
@@ -398,30 +444,55 @@ def delete_exercise_item(request, pk):
 
 @login_required
 def schedule(request):
-    # Initalize the scheduale
     today_date = timezone.localdate()
-    today_week = today_date.weekday()
-    start_date = today_date - timedelta(days=today_week) # start date for each week is Monday by default
-    current_week = []
-
-    for i in range(7):
-        current_week.append(start_date)
-        start_date += timedelta(1)
-    
-
-    # Collect all appointment
     client_user = get_object_or_404(UserDetail, user=request.user, role='trainer')
-    client = Client.objects.filter(user=client_user, is_archived=False)
-    appointment = Appointment.objects.filter(client__in=client, is_archived=False)
-    all_app = []
+    _archive_past_appointments(client_user, today_date)
+
+    week_start = _selected_week_start(request.GET.get("week"), today_date)
+    week_end = week_start + timedelta(days=6)
+    current_week = [week_start + timedelta(days=offset) for offset in range(7)]
     time_slot = [(time(hour, 0), time(hour + 1, 0)) for hour in range(8, 20)]
 
-    for k in appointment:
-        if k.date in current_week: 
-            all_app.append([k.client.first_name, k.client.last_name, k.date, k.starting_time])
-    
+    appointments = Appointment.objects.filter(
+        client__user=client_user,
+        client__is_archived=False,
+        date__range=(week_start, week_end),
+    ).filter(
+        Q(date__gte=today_date, is_archived=False)
+        | Q(date__lt=today_date, archive_source=Appointment.ARCHIVE_SOURCE_AUTO)
+    ).select_related("client").order_by("date", "starting_time", "pk")
 
-    return render(request, "schedule.html", {'current_week':current_week, 'time_slot':time_slot, 'all_app':all_app})
+    return render(request, "schedule.html", {
+        "appointments": appointments,
+        "current_week": current_week,
+        "time_slot": time_slot,
+        "today": today_date,
+        "selected_week_start": week_start,
+        "previous_week_start": week_start - timedelta(days=7),
+        "next_week_start": week_start + timedelta(days=7),
+    })
+
+
+@login_required
+@require_POST
+def archive_appointment(request, pk):
+    today_date = timezone.localdate()
+    trainer = get_object_or_404(UserDetail, user=request.user, role="trainer")
+    appointment = get_object_or_404(
+        Appointment,
+        pk=pk,
+        client__user=trainer,
+        client__is_archived=False,
+        is_archived=False,
+        date__gte=today_date,
+    )
+    appointment.is_archived = True
+    appointment.archive_source = Appointment.ARCHIVE_SOURCE_MANUAL
+    appointment.save(update_fields=["is_archived", "archive_source"])
+
+    messages.success(request, "The appointment has been archived.")
+    week_start = _selected_week_start(request.GET.get("week"), today_date)
+    return redirect(f"{reverse('schedule')}?week={week_start.isoformat()}")
 
 
 

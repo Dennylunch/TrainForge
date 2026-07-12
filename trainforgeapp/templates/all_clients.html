@@ -82,13 +82,9 @@
 
     
                                     
-                                    {% if client.appointment_set.all %}
-                                        {% for app in client.appointment_set.all %}
-                                            {% if not app.is_archived %}
-                                                <p class="px-4"><i class="bi bi-dot"></i>Latest appointment time: {{ app.latest_app_t }}</p>
-                                            {% endif %}
-                                        {% endfor %}
-                                    {% else %}    
+                                    {% if client.latest_appointment %}
+                                        <p class="px-4"><i class="bi bi-dot"></i>Latest appointment time: {{ client.latest_appointment.date }} {{ client.latest_appointment.starting_time }} (Duration: 1 hr)</p>
+                                    {% else %}
                                         <p class="px-4"><i class="bi bi-dot"></i>Latest appointment time: None</p>
                                     {% endif %}
 

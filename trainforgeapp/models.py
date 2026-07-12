@@ -133,11 +133,23 @@ class PlanExercise(models.Model):
 
 
 class Appointment(models.Model):
+    # constants
+    ARCHIVE_SOURCE_AUTO = "auto"
+    ARCHIVE_SOURCE_MANUAL = "manual"
+    ARCHIVE_SOURCE_LEGACY = "legacy"
+    ARCHIVE_SOURCE_CHOICES = [
+        (ARCHIVE_SOURCE_AUTO, "Automatically archived"),
+        (ARCHIVE_SOURCE_MANUAL, "Manually archived"),
+        (ARCHIVE_SOURCE_LEGACY, "Legacy archived"),
+    ]
+
+
     client = models.ForeignKey(Client, on_delete=models.CASCADE)
     date = models.DateField(blank=True, null=True)
     starting_time = models.TimeField(blank=True, null=True)
     purpose = models.TextField(max_length=100, blank=True)
     is_archived = models.BooleanField(default=False)
+    archive_source = models.CharField(max_length=10, choices=ARCHIVE_SOURCE_CHOICES, blank=True, null=True)
     status = models.CharField(max_length=100, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
 
@@ -151,6 +163,5 @@ class Appointment(models.Model):
 
     def __str__(self):
         return f"Appointment: {self.client.user.user.first_name} {self.client.user.user.last_name} & {self.client.first_name} {self.client.last_name} at {self.date}"
-
 
 
