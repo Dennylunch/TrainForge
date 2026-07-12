@@ -61,6 +61,7 @@ class AppointmentCalendarTests(TestCase):
         self.assertTrue(automatic.is_archived)
         self.assertEqual(automatic.archive_source, Appointment.ARCHIVE_SOURCE_AUTO)
         self.assertContains(response, "Alex")
+        self.assertContains(response, "archived-appointment-chip")
         self.assertNotContains(response, "Mia")
         self.assertNotContains(response, "Lee")
         self.assertNotContains(response, reverse("delete_appointment", args=[automatic.pk]))
@@ -136,6 +137,9 @@ class AppointmentCalendarTests(TestCase):
         response = self.client.get(self.schedule_url(future_date))
 
         self.assertContains(response, "table-layout: fixed")
+        self.assertContains(response, "table-responsive mt-4")
+        self.assertContains(response, "table table-sm")
+        self.assertContains(response, "text-start text-nowrap ps-3 py-1")
         self.assertContains(response, "dropdown-menu-end")
         self.assertContains(response, reverse("delete_appointment", args=[appointment.pk]))
         self.assertNotContains(response, "archiveAppointmentModal")
@@ -154,3 +158,21 @@ class AppointmentCalendarTests(TestCase):
         self.assertContains(response, "gap: 0.25rem")
         self.assertContains(response, "Alex")
         self.assertContains(response, "Blair")
+
+
+class LegalPagesTests(TestCase):
+    def test_privacy_policy_page_and_footer_links_are_available(self):
+        response = self.client.get(reverse("privacy_policy"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "privacy_policy.html")
+        self.assertContains(response, "AI-assisted suggestions")
+        self.assertContains(response, reverse("terms_of_service"))
+
+    def test_terms_of_service_page_and_privacy_link_are_available(self):
+        response = self.client.get(reverse("terms_of_service"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "terms_of_service.html")
+        self.assertContains(response, "Health and training information")
+        self.assertContains(response, reverse("privacy_policy"))

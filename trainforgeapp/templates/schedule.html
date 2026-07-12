@@ -15,6 +15,13 @@
         white-space: nowrap;
     }
 
+    .schedule-page .archived-appointment-chip {
+        background-color: #166534;
+        border-color: #166534;
+        color: #ffffff;
+        opacity: 1;
+    }
+
     .schedule-page .appointment-menu {
         max-width: 100%;
     }
@@ -112,37 +119,37 @@
             </a>
         </div>
 
-        <div class="table-responsive">
-            <table id="schedule-calendar" class="table table-striped align-middle shadow p-3 mb-5 bg-body-tertiary rounded">
+        <div class="table-responsive mt-4">
+            <table id="schedule-calendar" class="table table-sm table-striped align-middle shadow p-3 mb-5 bg-body-tertiary rounded">
                 <colgroup>
                     <col class="schedule-time-column">
                     <col span="7">
                 </colgroup>
                 <thead>
                     <tr>
-                        <th></th>
+                        <th class="py-1"></th>
                         {% for day in current_week %}
-                            <th class="text-center">{{ day|date:"d/m" }}</th>
+                            <th class="text-center py-1">{{ day|date:"d/m" }}</th>
                         {% endfor %}
                     </tr>
                     <tr>
-                        <th></th>
+                        <th class="py-1"></th>
                         {% for day in current_week %}
-                            <th class="text-center">{{ day|date:"D" }}</th>
+                            <th class="text-center py-1">{{ day|date:"D" }}</th>
                         {% endfor %}
                     </tr>
                 </thead>
                 <tbody>
                     {% for slot in time_slot %}
                         <tr>
-                            <td class="text-center text-nowrap">{{ slot.0|time:"H:i" }} &ndash; {{ slot.1|time:"H:i" }}</td>
+                            <td class="text-start text-nowrap ps-3 py-1">{{ slot.0|time:"H:i" }} &ndash; {{ slot.1|time:"H:i" }}</td>
                             {% for day in current_week %}
-                                <td class="text-center">
+                                <td class="text-center py-1">
                                     <div class="appointment-cell-content">
                                         {% for appointment in appointments %}
                                             {% if appointment.date == day and appointment.starting_time == slot.0 %}
                                                 {% if appointment.date < today %}
-                                                    <span class="appointment-chip btn btn-outline-success rounded-pill shadow-sm disabled" aria-label="Past appointment">
+                                                    <span class="appointment-chip archived-appointment-chip btn rounded-pill shadow-sm disabled" aria-label="Past appointment">
                                                         <i class="bi bi-calendar-check"></i> {{ appointment.client.first_name }}
                                                     </span>
                                                 {% else %}

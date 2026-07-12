@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Terms of Service | TrainForge{% endblock %}
+
+{% block content %}
+<div style="background: linear-gradient(135deg, #dbeafe 0%, #ccfbf1 45%, #bbf7d0 100%); min-height: 100vh;">
+    <section class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-12 col-lg-9">
+                <div class="card border-0 shadow-sm rounded-4">
+                    <div class="card-body p-4 p-md-5">
+                        <div class="d-flex align-items-center gap-3 mb-4">
+                            <span class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 3rem; height: 3rem;">
+                                <i class="bi bi-file-earmark-text fs-4"></i>
+                            </span>
+                            <div>
+                                <h1 class="h2 mb-1 text-success">Terms of Service</h1>
+                                <p class="text-body-secondary mb-0">Last updated: 12 July 2026</p>
+                            </div>
+                        </div>
+
+                        <p>These Terms govern use of TrainForge, a tool for organising personal-training client records, exercise plans, progress and appointments. By using TrainForge, you agree to use it responsibly and in accordance with applicable law.</p>
+
+                        <h2 class="h5 text-success mt-4">Trainer responsibilities</h2>
+                        <p>Trainers are responsible for the accuracy of information they enter, for maintaining the confidentiality of their account credentials and for ensuring they have authority to enter and manage client information. Trainers should obtain any consent required before adding a client's personal information to TrainForge.</p>
+
+                        <h2 class="h5 text-success mt-4">Health and training information</h2>
+                        <p>TrainForge supports training administration only. It does not provide medical diagnosis, emergency support or professional medical advice. Trainers and clients should seek qualified medical advice where appropriate, especially before starting or changing an exercise program.</p>
+
+                        <h2 class="h5 text-success mt-4">AI suggestions</h2>
+                        <p>AI-generated notes and exercise-plan suggestions are optional and are not guaranteed to be accurate, complete or suitable for a particular person. Trainers must review all suggestions and remain responsible for decisions made using them.</p>
+
+                        <h2 class="h5 text-success mt-4">Acceptable use</h2>
+                        <p>You must not use TrainForge to misuse another person's information, bypass access controls, interfere with the service, upload unlawful content or use the service for any purpose that breaches applicable law or another person's rights.</p>
+
+                        <h2 class="h5 text-success mt-4">Availability and changes</h2>
+                        <p>The deployment operator may update, maintain, suspend or discontinue features when reasonably necessary. You should keep independent records where they are important to your business or legal obligations.</p>
+
+                        <h2 class="h5 text-success mt-4">Privacy</h2>
+                        <p>Use of TrainForge is also subject to the <a class="link-success" href="{% url 'privacy_policy' %}">Privacy Policy</a>, which explains how personal information used in the service is handled.</p>
+
+                        <h2 class="h5 text-success mt-4">Questions</h2>
+                        <p class="mb-0">For questions about these Terms or the operation of this deployment, contact the trainer or site operator who provided access to TrainForge.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

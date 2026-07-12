@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Privacy Policy | TrainForge{% endblock %}
+
+{% block content %}
+<div style="background: linear-gradient(135deg, #dbeafe 0%, #ccfbf1 45%, #bbf7d0 100%); min-height: 100vh;">
+    <section class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-12 col-lg-9">
+                <div class="card border-0 shadow-sm rounded-4">
+                    <div class="card-body p-4 p-md-5">
+                        <div class="d-flex align-items-center gap-3 mb-4">
+                            <span class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 3rem; height: 3rem;">
+                                <i class="bi bi-shield-check fs-4"></i>
+                            </span>
+                            <div>
+                                <h1 class="h2 mb-1 text-success">Privacy Policy</h1>
+                                <p class="text-body-secondary mb-0">Last updated: 12 July 2026</p>
+                            </div>
+                        </div>
+
+                        <p>TrainForge helps personal trainers manage clients, training plans, exercise progress and appointments. This policy explains how the TrainForge deployment handles personal information used in that service.</p>
+
+                        <h2 class="h5 text-success mt-4">Information we collect</h2>
+                        <p>Depending on how TrainForge is used, information may include trainer account details, client names and contact details, gender, date of birth, weight, goals, preferred appointment notes, training plans, exercise progress and appointment details.</p>
+
+                        <h2 class="h5 text-success mt-4">Why we use it</h2>
+                        <p>Information is used to authenticate trainers, manage client records, create and track training plans, schedule appointments and provide the features requested by the trainer. Please only enter information that is relevant to those purposes.</p>
+
+                        <h2 class="h5 text-success mt-4">AI-assisted suggestions</h2>
+                        <p>When a trainer chooses an AI suggestion feature, selected training-plan information may be sent to the AI service configured for this deployment to generate suggested notes or exercise-plan ideas. AI output is a suggestion only and should be reviewed by the trainer before use. Do not enter information that is unnecessary for the requested suggestion.</p>
+
+                        <h2 class="h5 text-success mt-4">Access and sharing</h2>
+                        <p>TrainForge is designed so that trainers access records associated with their own accounts. Information may also be processed by hosting, database, authentication and AI-service providers needed to operate the service, or disclosed where required by law. A provider may process information outside Australia depending on the deployment configuration.</p>
+
+                        <h2 class="h5 text-success mt-4">Storage, retention and deletion</h2>
+                        <p>TrainForge uses authenticated access and keeps records for as long as they are needed for the service or the deployment operator's record-keeping needs. Some in-app deletions archive records rather than physically removing them. The deployment operator is responsible for backups, retention periods and secure hosting configuration.</p>
+
+                        <h2 class="h5 text-success mt-4">Access, correction and complaints</h2>
+                        <p>To request access to, correction of, or deletion of personal information, contact the trainer or site operator who provided access to this TrainForge deployment. If a privacy concern is not resolved, you may contact the relevant privacy regulator, such as the Office of the Australian Information Commissioner.</p>
+
+                        <h2 class="h5 text-success mt-4">Changes to this policy</h2>
+                        <p class="mb-0">We may update this policy when TrainForge or its data-handling practices change. The current version will always be available from the site footer.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
