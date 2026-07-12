@@ -5,7 +5,7 @@
 {% block all_clients %}active{% endblock %}
 
 {% block content %}
-<div style="background: linear-gradient(135deg, #dbeafe 0%, #ccfbf1 45%, #bbf7d0 100%); min-height: 100vh;"> 
+<div class="pb-3" style="background: linear-gradient(135deg, #dbeafe 0%, #ccfbf1 45%, #bbf7d0 100%); min-height: 100vh;">
     <div class="container">
         <div class="row justify-content-center pt-2 pt-md-4 pt-lg-5">
             <div class="col-12 col-md-12 col-lg-10">
@@ -215,7 +215,7 @@
         <!-- Pagination -->
         {% if is_paginated %}
         <nav aria-label="Page navigation">
-            <ul class="pagination justify-content-center">
+            <ul class="pagination justify-content-center" style="--bs-pagination-color: #198754; --bs-pagination-bg: #e8f8ef; --bs-pagination-border-color: #a7d7b7; --bs-pagination-hover-color: #146c43; --bs-pagination-hover-bg: #c7efd6; --bs-pagination-hover-border-color: #86cfa8; --bs-pagination-active-bg: #198754; --bs-pagination-active-border-color: #198754; --bs-pagination-disabled-bg: #edf9f1; --bs-pagination-disabled-border-color: #cce8d5;">
                 {% if page_obj.has_previous %}
                 <li class="page-item">
                     <a class="page-link" href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>
@@ -242,43 +242,6 @@
             </ul>
         </nav>
     {% endif %}
-
-
-
-
-
-        <!-- Pagination -->
-        {% if is_paginated %}
-        <nav aria-label="Page navigation">
-            <ul class="pagination justify-content-center">
-                {% if page_obj.has_previous %}
-                <li class="page-item">
-                    <a class="page-link" href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>
-                </li>
-                {% else %}
-                <li class="page-item disabled"><span class="page-link">Previous</span></li>
-                {% endif %}
-
-        
-                {% for num in paginator.page_range %}
-                <li class="page-item {% if page_obj.number == num %}active{% endif %}">
-                    <a class="page-link" href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}page={{ num }}">{{ num }}</a>
-                </li>
-                {% endfor %}
-
-
-                {% if page_obj.has_next %}
-                    <li class="page-item">
-                        <a class="page-link" href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a>
-                    </li>
-                {% else %}
-                    <li class="page-item disabled"><span class="page-link">Next</span></li>
-                {% endif %}
-            </ul>
-        </nav>
-    {% endif %}
-
-
 
 
 
