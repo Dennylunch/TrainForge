@@ -24,7 +24,11 @@
     </section>
 
     <div class="container pb-5">
-        <h4 class="text-success text-center pb-2"><strong>Current Week</strong></h4>
+        <div class="d-flex justify-content-center pb-2" aria-label="">
+            <button type="button" class="btn btn-success rounded-start-pill ms-4"><i class="bi bi-caret-left-fill"></i> Previous</button>
+            <h4 class="text-success flex-grow-1 text-center pt-2"><strong>Current Week</strong></h4>
+            <button type="button" class="btn btn-success rounded-end-pill me-4">Next <i class="bi bi-caret-right-fill"></i></button>
+        </div>
 
         <div class="table-responsive">
             <table class="table table-striped shadow p-3 mb-5 bg-body-tertiary rounded">
@@ -45,7 +49,7 @@
                 <tbody>
                     {% for slot in time_slot %}
                         <tr>
-                            <td class="text-center">{{ slot.0|time:"H:i" }}–{{ slot.1|time:"H:i" }}</td>
+                            <td class="text-center">{{ slot.0|time:"H:i" }} – {{ slot.1|time:"H:i" }}</td>
                             {% for day in current_week %}
                                 <td class="text-center">
                                     {% for appointment in all_app %}
