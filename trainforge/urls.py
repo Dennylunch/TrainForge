@@ -19,6 +19,7 @@ from django.urls import include, path
 from trainforgeapp import views
 
 urlpatterns = [
+    path("", views.index, name="root"),
     path("trainforge/", include("trainforgeapp.urls")),
     path("trainforge/admin/", admin.site.urls),
 
