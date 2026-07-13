@@ -139,7 +139,10 @@ def all_clients(request):
 
     _archive_past_appointments(user_details, today_date)
 
-    clients = Client.objects.filter(user=user_details, is_archived=False)
+    clients = Client.objects.filter(
+        user=user_details,
+        is_archived=False,
+    ).order_by("last_name", "first_name", "pk")
     client_plans = ClientPlan.objects.filter(client__in=clients, is_archived=False) # 'a__in=b' is same as 'a in []'  
     
     user_exercises = UserExercise.objects.filter(user=user_details)
@@ -224,7 +227,7 @@ def delete_client(request, pk):
         client.is_archived = True
         client.save()
 
-        messages.success(request, "The client have been deleted successfully.")
+        messages.success(request, "The client was deleted successfully.")
         return redirect("all_clients")
     
     return render(request, "client_delete.html", {"client": client})
@@ -263,7 +266,7 @@ def add_client(request):
                         description='',
                         progress=0)
                 
-                messages.success(request, "Client details have been created successfully.")
+                messages.success(request, "Client details were created successfully.")
                 return redirect("customize_plan", pk=client_detail.pk)
 
     else:
@@ -286,7 +289,7 @@ def edit_client(request, pk):
         if client_detail_form.is_valid() and client_plan_form.is_valid():
             client_detail_form.save()
             client_plan_form.save()
-            messages.success(request, "Client details have been updated successfully.")
+            messages.success(request, "Client details were updated successfully.")
             return redirect("customize_plan", pk=client.pk)
     
     else:
@@ -312,7 +315,7 @@ def customize_plan(request, pk): # create/update plan
             i.progress = request.POST.get(f"progress_{i.id}", 0)
             i.save()
 
-        messages.success(request, "Training Plan and Plan Exercise have been updated successfully.")
+        messages.success(request, "The training plan was updated successfully.")
         return redirect("appointment", pk=client.pk)
 
     return render(request, "customize_plan.html", {"plan_exercise": plan_exercise, "client": client})
@@ -332,7 +335,7 @@ def appointment(request, pk):
 
         if app_client_detail_form.is_valid() and appointment_form.is_valid():
             app_client_detail_form.save()
-            messages.success(request, "The client's preferred appointment time have been created/updated successfully.")
+            messages.success(request, "The client's preferred appointment time was saved successfully.")
             
             # determine whether there is a null/none value for start/end time in actual app
             time_slot_check = appointment_form.cleaned_data.get("starting_time")
@@ -373,7 +376,7 @@ def edit_appointment(request, pk):
 
         if app_client_detail_form.is_valid() and appointment_form.is_valid():
             app_client_detail_form.save()
-            messages.success(request, "The client's preferred appointment time have been created/updated successfully.")
+            messages.success(request, "The client's preferred appointment time was saved successfully.")
             
             # determine whether there is a null/none value for start/end time in actual app
             time_slot_check = appointment_form.cleaned_data.get("starting_time")
@@ -412,7 +415,7 @@ def exercise_item(request): # list and create the exercise items
             user_exercise.user = client_user
             user_exercise.save()
 
-            messages.success(request, "The new exercise have been created successfully.")
+            messages.success(request, "The new exercise was created successfully.")
             return redirect("exercise_item")
     
     else:
@@ -431,7 +434,7 @@ def edit_exercise_item(request, pk):
 
         if user_exercise_form.is_valid():
             user_exercise_form.save()
-            messages.success(request, "Your exercise item have been updated successfully.")
+            messages.success(request, "The exercise was updated successfully.")
             return redirect("exercise_item")
     
     else:
@@ -454,7 +457,7 @@ def delete_exercise_item(request, pk):
         if not plan_exercise:
             exercise_item.is_archived = True
             exercise_item.save()
-            messages.success(request, "The exercise have been deleted successfully.")
+            messages.success(request, "The exercise was deleted successfully.")
         else:
             messages.error(request, "The deletion request was rejected")
             messages.error(request, "This exercise cannot be deleted because it has already been selected by a client or included in an active training plan.")
@@ -540,7 +543,7 @@ def additional_login_view(request):
         # no use .first(): query a set of object (even 1 obj only) or return a empty set
         # use .first(): query 1 object or return a none
         if (not client_user) or (client_user.role != "trainer") or (client_user.is_archived):
-            messages.error(request, "Your account does not have permission to access the Trainforge.")
+            messages.error(request, "Your account does not have permission to access TrainForge.")
             return render(request, "registration/login.html")
         
         login(request, user)

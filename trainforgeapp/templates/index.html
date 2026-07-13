@@ -3,77 +3,148 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>TrainForge Landing Page</title>
+    <meta name="description" content="TrainForge helps personal trainers manage clients, training plans, progress, and appointments.">
+    <title>TrainForge | Personal Training Management</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+      .hero {
+        background:
+          radial-gradient(circle at 85% 20%, rgba(245, 158, 11, 0.35), transparent 28rem),
+          linear-gradient(135deg, #052e16 0%, #166534 52%, #15803d 100%);
+        min-height: 78vh;
+      }
+
+      .hero-panel {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+      }
+
+      .feature-icon {
+        align-items: center;
+        background: #dcfce7;
+        border-radius: 1rem;
+        color: #166534;
+        display: inline-flex;
+        font-size: 1.5rem;
+        height: 3rem;
+        justify-content: center;
+        width: 3rem;
+      }
+    </style>
   </head>
 
-  <body>
-    <main>
-      <div class="pt-1" style="background-image: url(https://img.freepik.com/free-photo/view-gym-room-training-sports_23-2151699497.jpg?semt=ais_hybrid&w=740&q=80); min-height: 80vh; background-repeat: no-repeat; background-size: cover; background-position: center;">
-        <section class="p-5 mt-5">
-          <div class="container">
-            <div class="row justify-content-center">
-                <h1 class="text-light text-center pt-4 display-1 col-12 col-md-8 col-lg-8" style="font-family:Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;">All-in-one fitness coaching platform</h1>
-                <h2 class="text-light text-center pt-4 col-12 col-md-10 col-lg-12" style="font-family: 'Times New Roman', Times, serif;"><i>Manage clients, create training plans, book appointments, and monitor progress with ease.</i></h2>
-                <a role="button" href="{% url 'login' %}" class="btn btn-success mt-4 rounded-pill border-success-subtle border-3 col-12" style="width: 200px;" >Get Started</a>   
+  <body class="bg-body-tertiary">
+    <header class="hero text-white d-flex flex-column">
+      <nav class="navbar navbar-expand-sm navbar-dark py-3">
+        <div class="container">
+          <a class="navbar-brand fw-bold fs-4" href="{% url 'root' %}">
+            <i class="bi bi-lightning-charge-fill me-1"></i>TrainForge
+          </a>
+          <div class="d-flex gap-2">
+            <a class="btn btn-outline-light rounded-pill px-3" href="{% url 'login' %}">Sign in</a>
+            <a class="btn btn-warning rounded-pill px-3 fw-semibold" href="{% url 'signup' %}">Create account</a>
+          </div>
+        </div>
+      </nav>
+
+      <section class="container flex-grow-1 d-flex align-items-center py-5">
+        <div class="row align-items-center g-5 w-100">
+          <div class="col-lg-7">
+            <span class="badge rounded-pill text-bg-warning mb-3 px-3 py-2">Built for personal trainers</span>
+            <h1 class="display-3 fw-bold lh-1 mb-4">Keep every client plan moving forward.</h1>
+            <p class="lead text-white-50 mb-4">Manage client profiles, customise exercise plans, track progress, and organise weekly appointments from one focused workspace.</p>
+            <div class="d-flex flex-wrap gap-3">
+              <a class="btn btn-warning btn-lg rounded-pill px-4 fw-semibold" href="{% url 'signup' %}">Get started <i class="bi bi-arrow-right ms-1"></i></a>
+              <a class="btn btn-outline-light btn-lg rounded-pill px-4" href="#features">Explore features</a>
             </div>
           </div>
-        </section>
-      </div>
-
-      <section class="py-5">
-            <div class="container">
-                <h2 class="text-center mb-4 text-success"><b><u>Key Features</u></b></h2>
-                <div class="row">
-                    <div class="col-md-6 mb-4">
-                        <div class="card">
-                            <img src="https://img.freepik.com/free-vector/business-consultant-puzzled-man-working-laptop_1262-20610.jpg?semt=ais_hybrid&w=740&q=80" alt="Client Management Conceptual Figure" style="height: 350px;">
-                            <div class="card-body">
-                                <h4 class="card-title">Client Management</h4>
-                                <p class="card-text">Add, view, and manage client profiles with ease and better organisation.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6 mb-4">
-                        <div class="card">
-                            <img src="https://www.aihr.com/wp-content/uploads/employee-training-plan-template-cover-image.png" alt="Personalised Training Plans Conceptual Figure" style="height: 350px;">
-                            <div class="card-body">
-                                <h4 class="card-title">Personalised Training Plans</h4>
-                                <p class="card-text">Create tailored exercise plans with descriptions and repetitions for each client.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6 mb-4">
-                        <div class="card">
-                            <img src="https://img.freepik.com/free-vector/hand-drawn-business-planning-concept_52683-75940.jpg?t=st=1776912407~exp=1776916007~hmac=9e4aa1870a17fb87ec216938752cfe2b4097f44e557346d3e14e52513fc165fa&w=2000" alt="Appointment Scheduling Conceptual Figure" style="height: 350px;">
-                            <div class="card-body">
-                                <h4 class="card-title">Appointment Scheduling</h4>
-                                <p class="card-text">Book appointments and view them in the weekly calendar.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6 mb-4">
-                        <div class="card">
-                            <img src="https://cdn.vectorstock.com/i/500p/96/49/fitness-app-dashboard-vector-61739649.jpg" alt="Progress Tracking Conceptual Figure" style="height: 350px;">
-                            <div class="card-body">
-                                <h4 class="card-title">Progress Tracking</h4>
-                                <p class="card-text">Track and monitor progress for each exercise for clients.</p>
-                            </div>
-                        </div>
-                    </div>
+          <div class="col-lg-5">
+            <div class="hero-panel rounded-4 p-4 p-lg-5 shadow-lg">
+              <div class="d-flex align-items-center gap-3 mb-4">
+                <span class="bg-warning text-dark rounded-3 p-3"><i class="bi bi-stars fs-3"></i></span>
+                <div>
+                  <p class="small text-uppercase text-white-50 mb-1">Trainer-reviewed AI</p>
+                  <h2 class="h4 mb-0">Draft faster. Decide yourself.</h2>
                 </div>
+              </div>
+              <p class="mb-0 text-white-50">Generate structured suggestions for weekly notes and selected exercises, then review them before anything is saved.</p>
             </div>
-        </section>
+          </div>
+        </div>
+      </section>
+    </header>
 
+    <main>
+      <section id="features" class="py-5">
+        <div class="container py-lg-4">
+          <div class="text-center mx-auto mb-5" style="max-width: 44rem;">
+            <p class="text-success fw-semibold text-uppercase mb-2">One coaching workspace</p>
+            <h2 class="display-6 fw-bold">The essentials for day-to-day client management</h2>
+          </div>
 
-        
+          <div class="row g-4">
+            <div class="col-md-6 col-xl-3">
+              <article class="card h-100 border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                  <span class="feature-icon mb-4"><i class="bi bi-people"></i></span>
+                  <h3 class="h5 fw-bold">Client profiles</h3>
+                  <p class="text-body-secondary mb-0">Organise goals, plan dates, appointment preferences, and progress in trainer-scoped records.</p>
+                </div>
+              </article>
+            </div>
+            <div class="col-md-6 col-xl-3">
+              <article class="card h-100 border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                  <span class="feature-icon mb-4"><i class="bi bi-clipboard2-pulse"></i></span>
+                  <h3 class="h5 fw-bold">Training plans</h3>
+                  <p class="text-body-secondary mb-0">Configure exercise frequency, repetitions, guidance, and progress for each client.</p>
+                </div>
+              </article>
+            </div>
+            <div class="col-md-6 col-xl-3">
+              <article class="card h-100 border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                  <span class="feature-icon mb-4"><i class="bi bi-calendar-week"></i></span>
+                  <h3 class="h5 fw-bold">Weekly scheduling</h3>
+                  <p class="text-body-secondary mb-0">Book one-hour appointments and review current or automatically archived calendar history.</p>
+                </div>
+              </article>
+            </div>
+            <div class="col-md-6 col-xl-3">
+              <article class="card h-100 border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                  <span class="feature-icon mb-4"><i class="bi bi-magic"></i></span>
+                  <h3 class="h5 fw-bold">AI-assisted drafts</h3>
+                  <p class="text-body-secondary mb-0">Review structured note and exercise suggestions while retaining control over saved content.</p>
+                </div>
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="bg-white border-top py-5">
+        <div class="container text-center py-4">
+          <h2 class="fw-bold mb-3">Ready to organise your coaching workflow?</h2>
+          <p class="text-body-secondary mb-4">Create a trainer account and start with a ready-to-customise exercise catalogue.</p>
+          <a class="btn btn-success btn-lg rounded-pill px-4" href="{% url 'signup' %}">Create a TrainForge account</a>
+        </div>
+      </section>
     </main>
 
+    <footer class="bg-dark text-white-50 py-4">
+      <div class="container d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3">
+        <span>TrainForge</span>
+        <div class="d-flex gap-3">
+          <a class="link-light link-underline-opacity-0" href="{% url 'privacy_policy' %}">Privacy</a>
+          <a class="link-light link-underline-opacity-0" href="{% url 'terms_of_service' %}">Terms</a>
+          <a class="link-light link-underline-opacity-0" href="https://github.com/Dennylunch/TrainForge">GitHub</a>
+        </div>
+      </div>
+    </footer>
 
-
-
-    <!-- This script includes all of Bootstrap's JavaScript-based components and behaviors, such as modal windows, dropdowns, and tooltips.  -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
   </body>
 </html>

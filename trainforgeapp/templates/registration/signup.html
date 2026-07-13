@@ -3,84 +3,71 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Create a TrainForge ID | TrainForge</title>
+    <title>Create Account | TrainForge</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   </head>
 
   <body>
-    <main>
-      <div class="pt-1 d-flex align-items-center" style="background-image: url(https://img.freepik.com/free-photo/flat-lay-sports-attributes-with-water-bottle-apple_23-2148259088.jpg?t=st=1776914694~exp=1776918294~hmac=ca66e7ba4e545395f709175ce6b33e4eed4884d9b0c4989e641392498ecd6624&w=2000); min-height: 100vh; background-repeat: no-repeat; background-size: cover; background-position: center;">
-        <section class="w-100">
-          <div class="container">
-            <div class="row justify-content-center">
-               <div class="col-12 col-md-8 col-lg-6">
-                  <div class="bg-light px-5 pt-5 pb-3 rounded-4">
-                    <h2 class="text-center mb-4 text-success">Create a <b>TrainForge</b> ID</h2>
-                    <form method="post">
-                      {% csrf_token %}
+    <main class="d-flex align-items-center py-5" style="background: radial-gradient(circle at 15% 20%, rgba(245, 158, 11, 0.4), transparent 24rem), linear-gradient(135deg, #052e16 0%, #15803d 100%); min-height: 100vh;">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-12 col-md-9 col-lg-6">
+            <div class="text-center text-white mb-4">
+              <a class="text-white text-decoration-none" href="{% url 'root' %}">
+                <span class="fs-3 fw-bold"><i class="bi bi-lightning-charge-fill me-1"></i>TrainForge</span>
+              </a>
+              <p class="text-white-50 mt-2 mb-0">Create your personal training workspace.</p>
+            </div>
 
-                      {% if messages %}
-                        {% for message in messages %}
-                          <div class="alert alert-danger">
-                            {{message}}
-                          </div>
-                        {% endfor %}
-                      {% endif %}
+            <div class="bg-white p-4 p-md-5 rounded-4 shadow-lg">
+              <h1 class="h2 text-center mb-4 fw-bold">Create an account</h1>
 
+              {% if messages %}
+                {% for message in messages %}
+                  <div class="alert alert-{{ message.tags }}" role="alert">{{ message }}</div>
+                {% endfor %}
+              {% endif %}
 
-                      <div class="mb-3">
-                        <label for="userfn" class="form-label">First Name<span class="text-danger"> *</span></label>
-                        <input type="text" class="form-control" id="userfn" name="userfn" required>
-                      </div>
-                      <div class="mb-3">
-                        <label for="userln" class="form-label">Last Name<span class="text-danger"> *</span></label>
-                        <input type="text" class="form-control" id="userln" name="userln" required>
-                      </div>
-                      <div class="mb-3">
-                        <label for="user_email" class="form-label">Email<span class="text-danger"> *</span></label>
-                        <input type="email" class="form-control" id="user_email" name="user_email" required>
-                      </div>
-                      <div class="mb-3">
-                        <label for="user_pw" class="form-label">Password
-                          <span class="text-danger"> * </span>
-                        </label>
-                        <p class="form-text text-danger"> Warning: Password should at least 8 characters in length.</p>
-                        <input type="password" class="form-control" id="user_pw" minlength="8" name="user_pw" required>
-                      </div>
-                      <div class="mb-3">
-                        <label for="user_con_pw" class="form-label">Confirm Password
-                          <span class="text-danger"> *</span>
-                        </label>
-                        <input type="password" class="form-control" id="user_con_pw" minlength="8" name="user_con_pw" required>
-                      </div>
-                      <div class="mb-3">
-                        <input type="checkbox" id="agree" name="terms_agree" required>
-                        <label for="agree" class="form-check-label">Agree to terms and conditions</label>
-                        <span class="text-danger"> *</span>
-                      </div>
-                      <div class="text-center pt-2">
-                        <button type="submit" class="btn btn-success px-4">Create a TrainForge ID</button>
-                      </div>
-                      <div class="text-center">
-                        <p class="mt-4" >Already have a TrainForge ID? <a href="{% url 'login' %}" class="text-success">Login</a></p>
-                      </div>
-                    </form>
+              <form method="post">
+                {% csrf_token %}
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label for="userfn" class="form-label">First name <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="userfn" name="userfn" autocomplete="given-name" required>
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label for="userln" class="form-label">Last name <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="userln" name="userln" autocomplete="family-name" required>
                   </div>
                 </div>
-              </div>
+                <div class="mb-3">
+                  <label for="user_email" class="form-label">Email <span class="text-danger">*</span></label>
+                  <input type="email" class="form-control" id="user_email" name="user_email" autocomplete="email" required>
+                </div>
+                <div class="mb-3">
+                  <label for="user_pw" class="form-label">Password <span class="text-danger">*</span></label>
+                  <input type="password" class="form-control" id="user_pw" minlength="8" name="user_pw" autocomplete="new-password" aria-describedby="password_help" required>
+                  <div id="password_help" class="form-text">Use at least 8 characters.</div>
+                </div>
+                <div class="mb-3">
+                  <label for="user_con_pw" class="form-label">Confirm password <span class="text-danger">*</span></label>
+                  <input type="password" class="form-control" id="user_con_pw" minlength="8" name="user_con_pw" autocomplete="new-password" required>
+                </div>
+                <div class="form-check mb-4">
+                  <input class="form-check-input" type="checkbox" id="agree" name="terms_agree" required>
+                  <label for="agree" class="form-check-label">I agree to the <a class="link-success" href="{% url 'terms_of_service' %}" target="_blank" rel="noopener">Terms of Service</a> and acknowledge the <a class="link-success" href="{% url 'privacy_policy' %}" target="_blank" rel="noopener">Privacy Policy</a>. <span class="text-danger">*</span></label>
+                </div>
+                <button type="submit" class="btn btn-success btn-lg w-100">Create account</button>
+              </form>
+
+              <p class="text-center text-body-secondary mt-4 mb-0">Already have an account? <a href="{% url 'login' %}" class="link-success fw-semibold">Sign in</a>.</p>
+            </div>
           </div>
-        </section>
+        </div>
       </div>
-
-
-        
     </main>
 
-
-
-
-    <!-- This script includes all of Bootstrap's JavaScript-based components and behaviors, such as modal windows, dropdowns, and tooltips.  -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
   </body>
 </html>

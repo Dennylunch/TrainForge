@@ -18,13 +18,21 @@ db.sqlite3-journal
 .env.*
 !.env.example
 
-# Local project notes
-INFS3202.txt
+# Local-only notes
+.local-notes/
+
+# Generated static assets
+staticfiles/
 
 # Test and tool caches
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+*.log
 
 # Editor and OS files
 .vscode/
