@@ -6,7 +6,7 @@
 
 TrainForge combines server-rendered Django workflows with lightweight HTMX interactions and optional, trainer-reviewed AI suggestions.
 
-[![Live Demo](https://img.shields.io/badge/Live_Demo-Render-46E3B7?logo=render&logoColor=white)](https://trainforge-kg39.onrender.com)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-AWS_Lightsail-232F3E?logo=amazonwebservices&logoColor=white)](https://trainforge.duckdns.org/)
 [![CI](https://github.com/Dennylunch/TrainForge/actions/workflows/ci.yml/badge.svg)](https://github.com/Dennylunch/TrainForge/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/Python-3.14-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![Django](https://img.shields.io/badge/Django-6.0.3-092E20?logo=django&logoColor=white)](https://www.djangoproject.com/)
@@ -15,12 +15,12 @@ TrainForge combines server-rendered Django workflows with lightweight HTMX inter
 [![OpenAI](https://img.shields.io/badge/OpenAI-API-412991?logo=openai&logoColor=white)](https://openai.com/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-[Live Demo](https://trainforge-kg39.onrender.com) · [Report a Bug](https://github.com/Dennylunch/TrainForge/issues/new?template=bug_report.yml) · [Request a Feature](https://github.com/Dennylunch/TrainForge/issues/new?template=feature_request.yml)
+[Live Demo (AWS)](https://trainforge.duckdns.org/) · [Backup Demo (Render)](https://trainforge-kg39.onrender.com) · [Report a Bug](https://github.com/Dennylunch/TrainForge/issues/new?template=bug_report.yml) · [Request a Feature](https://github.com/Dennylunch/TrainForge/issues/new?template=feature_request.yml)
 
 </div>
 
 > [!IMPORTANT]
-> The public demo runs on Render's free service with SQLite and no persistent disk. It is intended for evaluation only: accounts and data may reset after a restart, spin-down, or deployment. See [Render's free service documentation](https://render.com/docs/free).
+> Use the [AWS Lightsail demo](https://trainforge.duckdns.org/) as the primary evaluation environment. The [Render demo](https://trainforge-kg39.onrender.com) is a fallback hosted on Render's free service; it may need time to wake up. If its first page load or sign-in temporarily fails, wait 30–60 seconds and refresh once. Accounts and data on the fallback may reset after a restart, spin-down, or deployment. See [Render's free service documentation](https://render.com/docs/free).
 
 ## Project Overview
 
@@ -71,7 +71,7 @@ The application also provides two optional AI-assisted workflows: draft weekly t
 | Frontend | Django Templates, Bootstrap 5.3.8, Bootstrap Icons, HTMX 2.0.8 | Responsive UI and targeted partial-page updates |
 | Database | SQLite; `dj-database-url`; PostgreSQL driver | SQLite is the default and current demo database; `DATABASE_URL` enables a URL-configured database |
 | AI / APIs | OpenAI API, LangChain, Pydantic | Structured, trainer-reviewed draft suggestions |
-| Deployment | Render, WhiteNoise | Hosted WSGI service and compressed static-file delivery |
+| Deployment | AWS Lightsail, Nginx, Gunicorn, WhiteNoise; Render fallback | HTTPS reverse proxy, WSGI hosting, and static-file delivery |
 | Development tools | Django TestCase, Git, GitHub Actions | Automated checks, tests, and collaboration workflow |
 
 ## System Architecture
@@ -82,7 +82,8 @@ TrainForge uses a Django monolith: browser requests, templates, application logi
 flowchart LR
     Browser["Browser<br/>Bootstrap + HTMX"]
 
-    subgraph Render["Render web service"]
+    subgraph Lightsail["AWS Lightsail instance"]
+        Nginx["Nginx<br/>HTTPS reverse proxy"]
         Gunicorn["Gunicorn / WSGI"]
         Django["Django URL routing"]
         Views["Views and domain workflows"]
@@ -96,7 +97,7 @@ flowchart LR
     LangChain["LangChain + Pydantic parser"]
     OpenAI["OpenAI API"]
 
-    Browser -->|HTTPS request| Gunicorn
+    Browser -->|HTTPS request| Nginx --> Gunicorn
     Gunicorn --> Django --> Views
     Views --> Templates -->|HTML or partial HTML| Browser
     Views --> ORM
@@ -292,7 +293,7 @@ Collected files are generated in `staticfiles/` and are intentionally excluded f
 | `OPENAI_API_KEY` | Optional | Required only when invoking AI-assisted suggestion features. |
 | `DATABASE_URL` | Optional | Switches persistence from the SQLite fallback to a URL-configured database. |
 | `CSRF_TRUSTED_ORIGINS` | Optional | Comma-separated HTTPS origins trusted for CSRF-protected requests. |
-| `RENDER_EXTERNAL_HOSTNAME` | Platform-managed | Added to `ALLOWED_HOSTS` automatically when Render provides it. |
+| `RENDER_EXTERNAL_HOSTNAME` | Render-managed | Added to `ALLOWED_HOSTS` automatically for the Render fallback deployment. |
 
 Never commit `.env`, database files, or API credentials.
 
@@ -330,11 +331,11 @@ TrainForge/
 | Keep client summaries efficient as related appointments grow | Prefetch ordered appointments and use `select_related` in the calendar query |
 | Safely integrate non-deterministic model output | Parse structured JSON with Pydantic, keep a trainer review step, and fall back without overwriting saved data |
 | Give each trainer a customisable exercise catalogue | Seed canonical exercises through a migration, then copy them into trainer-owned records at signup |
-| Support development and hosted execution with one settings module | Use SQLite by default, optional `DATABASE_URL`, Gunicorn, Render host discovery, and WhiteNoise |
+| Support development and multiple hosted environments with one settings module | Use SQLite by default, optional `DATABASE_URL`, Gunicorn, AWS/Nginx hosting, Render host discovery, and WhiteNoise |
 
 ## Current Limitations
 
-- The public demo's SQLite database is ephemeral and should not be used for durable or sensitive data.
+- The primary demo uses SQLite on a single Lightsail instance; the Render fallback is ephemeral. Neither environment should store sensitive or business-critical data.
 - AI suggestions require an OpenAI API key and do not include medical or safety validation.
 - One-active-appointment and date-ordering rules are enforced primarily in view logic rather than database constraints.
 - Automated coverage currently focuses on appointment lifecycle, calendar behaviour, ownership isolation, and legal pages.
