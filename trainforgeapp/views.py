@@ -40,10 +40,6 @@ def log_ai_generation_error(feature: str, error: Exception) -> None:
     safe_message = re.sub(r"sk-[A-Za-z0-9_-]+", "[REDACTED_API_KEY]", str(error))
     logger.error("%s failed (%s): %s", feature, type(error).__name__, safe_message)
 
-class AINoteSuggestions(BaseModel):
-    # This defines a list of strings
-    suggestions: List[str] = Field(description="List of AI-generated weekly training notes alternatives")
-
 class AIExercisePlanSuggestions(BaseModel):
     ex_p_sug: List[list[str]] = Field(description="1个nested list, 它内部的每一个'[]'都代表一个运动项目，内部'[]'中有四个数据, 分别为运动项目名称, frequency[纯正整数(datatype: int)], repetition(纯正整数(datatype: int), 以及description[文本、数字、特殊符号的组合(datatype: str)]")
 
@@ -560,99 +556,6 @@ def additional_login_view(request):
         login(request, user)
         return redirect("all_clients")
     return render(request, "registration/login.html")
-
-
-@login_required
-def suggest_ai_note(request, client_id):
-    client_user = get_object_or_404(UserDetail, user=request.user, role='trainer')
-    client = get_object_or_404(Client, id=client_id, user=client_user)
-    client_plan = get_object_or_404(ClientPlan, client=client, is_archived=False)
-    plan_exercises = PlanExercise.objects.filter(client_plan=client_plan, is_archived=False)
-
-    c_weight = f"Current weight: {client.current_weight}" 
-    t_weight = f"Target weight: {client.target_weight}" 
-    start_date = f"Training plan start date: {client_plan.start_date}" 
-    end_date = f"Training plan end date: {client_plan.end_date}"
-    plan_exercise_spec = "Preferred (selected) planning exercises: "
-
-    if client.goal_description:
-        training_goal = "Training goal: " + client.goal + ', ' + client.goal_description
-    else:
-        training_goal = "Training goal: " + client.goal
-
-    for i in plan_exercises:
-        plan_exercise_spec += f"exercise item: {i.user_exercise.exercise_name_copy}\n"
-        plan_exercise_spec += f"frequency: {i.frequency}\n"
-        plan_exercise_spec += f"repetition: {i.repetition}\n"
-        plan_exercise_spec += f"description: {i.description or 'not provided'}\n\n"
-
-    # Define the structured output parser using your schema
-    parser = JsonOutputParser(pydantic_object=AINoteSuggestions)
-
-    # Define the prompt
-    prompt = PromptTemplate(
-        template=(
-            "You are a professional personal trainer.\n"
-            "Your objective is to draw on your professional expertise and teaching experience to create a tailored weekly exercise plan for the following client.\n"
-            "Generate 3 training note alternatives based on the client information below.\n\n"
-            "{format_instructions}\n\n"
-            "Return exactly one valid JSON object that follows the required format. "
-            "Do not include Markdown fences, explanations, or any text outside the JSON object.\n\n"
-            "client_information: \n"
-            "{c_weight}\n"
-            "{t_weight}\n"
-            "{start_date}\n"
-            "{end_date}\n"
-            "{plan_exercise_spec}\n"
-            "{training_goal}\n"               
-        ),
-        input_variables=["c_weight", "t_weight", "start_date", "end_date", "plan_exercise_spec", "training_goal"],
-        partial_variables={"format_instructions": parser.get_format_instructions()},
-    )
-
-    # Set up the chain
-    llm = ChatOpenAI(
-        api_key=settings.OPENAI_API_KEY,
-        base_url=settings.OPENAI_BASE_URL,
-        model=settings.OPENAI_MODEL,
-        temperature=0,
-    )
-    chain = prompt | llm | parser
-
-    try:
-        result = chain.invoke({"c_weight":c_weight , "t_weight":t_weight , "start_date":start_date , "end_date":end_date ,
-                                "plan_exercise_spec":plan_exercise_spec , "training_goal": training_goal})
-        suggestions = result["suggestions"]
-    except Exception as error:
-        log_ai_generation_error("AI weekly-note generation", error)
-        suggestions = []
-
-    # Return ONLY the partial template — HTMX will insert it into the page
-    return render(request, "partials/_note_suggestions.html", {
-        "suggestions": suggestions,
-        "client":client,
-        "plan":client_plan,
-    })
-
-
-@login_required
-def select_ai_note(request, client_id):
-    new_note = request.POST.get("newnote")
-    client_user = get_object_or_404(UserDetail, user=request.user, role='trainer')
-    client = get_object_or_404(Client, id=client_id, user=client_user)
-    client_plan = get_object_or_404(ClientPlan, client=client, is_archived=False)
-
-    client_plan.weekly_notes = new_note
-    client_plan.save()
-
-    # Return the updated bio section — HTMX replaces the old one
-    return render(request, "partials/_note_section.html", {
-        "client": client,
-        "plan": client_plan,
-    })
-
-
-
 
 
 @login_required

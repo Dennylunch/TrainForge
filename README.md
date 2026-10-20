@@ -26,7 +26,7 @@ TrainForge combines server-rendered Django workflows with lightweight HTMX inter
 
 TrainForge is a server-rendered web application built for personal trainers who need one place to organise client records, configure exercise plans, monitor progress, and review upcoming appointments. Each authenticated trainer works with their own clients and exercise catalogue.
 
-The application also provides two optional AI-assisted workflows: draft weekly training notes and suggested details for exercises the trainer has already selected. Generated content is presented for review and is never a substitute for professional or medical judgement.
+The application provides an optional AI-assisted workflow to suggest frequency, repetitions, and guidance for exercises the trainer has already selected. Generated content is presented for review and is never a substitute for professional or medical judgement.
 
 ## Key Features
 
@@ -52,9 +52,8 @@ The application also provides two optional AI-assisted workflows: draft weekly t
 
 ### AI-assisted drafting
 
-- Generate three structured weekly-note alternatives and select one through an HTMX partial update.
 - Suggest frequency, repetitions, and descriptions for exercises already chosen by the trainer.
-- Keep the trainer in control: suggestions are reviewed before they are selected or saved.
+- Keep the trainer in control: generated values are reviewed in the form before they are saved.
 - Fall back to the existing form state when generation fails.
 
 ### Authentication and data isolation
@@ -317,10 +316,10 @@ TrainForge/
 ## Design Decisions
 
 - **Server-rendered monolith:** Django templates keep routing, validation, rendering, and persistence cohesive for the project's scope.
-- **Targeted HTMX interactions:** AI note selection updates only the affected section without introducing a separate SPA or frontend build system.
+- **Focused AI assistance:** the AI populates the selected exercises' editable form fields without introducing a separate SPA or frontend build system.
 - **Trainer-scoped queries:** protected object lookups include the authenticated trainer, reducing accidental cross-account data access.
 - **Soft archival with provenance:** appointment archive sources distinguish elapsed history from explicit user deletion.
-- **Human-reviewed AI:** structured output is shown as editable or selectable draft content before persistence.
+- **Human-reviewed AI:** structured output is shown in editable form fields before persistence.
 - **Portable persistence:** SQLite keeps local setup small, while `DATABASE_URL` allows a hosted database configuration.
 
 ## Challenges and Solutions

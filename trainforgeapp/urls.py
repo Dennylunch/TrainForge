@@ -25,9 +25,6 @@ urlpatterns = [
     path("schedule/", views.schedule, name="schedule"),
     path("schedule/appointments/delete/<int:pk>/", views.delete_appointment, name="delete_appointment"),
 
-    path("suggest_ai_note/<int:client_id>/", views.suggest_ai_note, name="suggest_ai_note"),
-    path("select_ai_note/<int:client_id>/", views.select_ai_note, name="select_ai_note"),
-
     path("suggest_ai_plan_customization/<int:client_id>/", views.suggest_ai_plan_customization, name="suggest_ai_plan_customization"),
 ]
 

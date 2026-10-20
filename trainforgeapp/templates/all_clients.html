@@ -145,10 +145,6 @@
                                     <div class="row pt-3">
                                         {% for plan in client.clientplan_set.all %}
                                             {% if not plan.is_archived %}
-                                                <!-- AI generative feature --> 
-                                                <div class="mb-4">{% include "partials/_note_section.html" %}</div>
-                                                <!-- Embeds the AI Plan partial into the full page -->
-
                                                 <h5 class="text-center pt-1"><b><u>Detailed exercise plans</u></b></h5>
                                                 {% for p_exercise in plan.planexercise_set.all %}
                                                     {% if not p_exercise.is_archived %}
