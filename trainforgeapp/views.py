@@ -28,6 +28,17 @@ from langchain_core.output_parsers import JsonOutputParser
 from django.conf import settings
 import markdown
 from django.utils.safestring import mark_safe
+import logging
+import re
+
+
+logger = logging.getLogger(__name__)
+
+
+def log_ai_generation_error(feature: str, error: Exception) -> None:
+    """Log an AI failure reason without including an API key."""
+    safe_message = re.sub(r"sk-[A-Za-z0-9_-]+", "[REDACTED_API_KEY]", str(error))
+    logger.error("%s failed (%s): %s", feature, type(error).__name__, safe_message)
 
 class AINoteSuggestions(BaseModel):
     # This defines a list of strings
@@ -610,7 +621,8 @@ def suggest_ai_note(request, client_id):
         result = chain.invoke({"c_weight":c_weight , "t_weight":t_weight , "start_date":start_date , "end_date":end_date ,
                                 "plan_exercise_spec":plan_exercise_spec , "training_goal": training_goal})
         suggestions = result["suggestions"]
-    except Exception:
+    except Exception as error:
+        log_ai_generation_error("AI weekly-note generation", error)
         suggestions = []
 
     # Return ONLY the partial template — HTMX will insert it into the page
@@ -707,8 +719,8 @@ def suggest_ai_plan_customization(request, client_id):
             original_data.repetition = generated_data[2]
             original_data.description = generated_data[3]
 
-    except Exception as e:
-        print(e)
+    except Exception as error:
+        log_ai_generation_error("AI plan-customization generation", error)
         ex_p_sug = []
 
     return render(request, "customize_plan.html", {
