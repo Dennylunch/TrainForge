@@ -596,6 +596,8 @@ def suggest_ai_note(request, client_id):
             "Your objective is to draw on your professional expertise and teaching experience to create a tailored weekly exercise plan for the following client.\n"
             "Generate 3 training note alternatives based on the client information below.\n\n"
             "{format_instructions}\n\n"
+            "Return exactly one valid JSON object that follows the required format. "
+            "Do not include Markdown fences, explanations, or any text outside the JSON object.\n\n"
             "client_information: \n"
             "{c_weight}\n"
             "{t_weight}\n"
@@ -613,7 +615,7 @@ def suggest_ai_note(request, client_id):
         api_key=settings.OPENAI_API_KEY,
         base_url=settings.OPENAI_BASE_URL,
         model=settings.OPENAI_MODEL,
-        temperature=0.7,
+        temperature=0,
     )
     chain = prompt | llm | parser
 
@@ -693,7 +695,9 @@ def suggest_ai_plan_customization(request, client_id):
             "最外层的'[]'中的每一个'[]'代表该学员选择的运动项目，每个运动项目'[]'中有四个数据，从左到右依次是运动项目的名称，学员计划该项目的 frequency，repetition，以及description，即教练针对该项目给学员的一些notes和健身指导。 \n"
             "每个运动项目'[]'中右边3个数据可能是not provided或者是不符合实际的，你的任务就是先分析该学员的所有信息，然后根据学员的实际情况，生成个性化健身计划，返回值也是'[]'这样的形式，外部是一个'[]'，它内部的每一个'[]'都代表一个运动项目，内部'[]'中有四个数据，分别为运动项目名称(你不用更改)，frequency(你需要更改)，repetition(你需要更改)，以及description(你需要更改) \n"
             "frequency，repetition，以及description主要是你要改动的。frequency和repetition必须纯是正整数(datatype: int)，无需任何单位，description是文本、数字、特殊符号的组合(datatype: str) \n"
-            "你的所有回复必须是英文"
+            "你的所有回复必须是英文。"
+            "Return exactly one valid JSON object that follows the required format. "
+            "Do not include Markdown fences, explanations, or any text outside the JSON object."
         ),
         input_variables=["c_weight", "t_weight", "start_date", "end_date", "detailed_plan", "training_goal"],
         partial_variables={"format_instructions": parser.get_format_instructions()},
@@ -704,7 +708,7 @@ def suggest_ai_plan_customization(request, client_id):
         api_key=settings.OPENAI_API_KEY,
         base_url=settings.OPENAI_BASE_URL,
         model=settings.OPENAI_MODEL,
-        temperature=0.7,
+        temperature=0,
     )
     chain = prompt | llm | parser
 
