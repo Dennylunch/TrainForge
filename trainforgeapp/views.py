@@ -600,7 +600,8 @@ def suggest_ai_note(request, client_id):
     # Set up the chain
     llm = ChatOpenAI(
         api_key=settings.OPENAI_API_KEY,
-        model="gpt-5.4-mini",
+        base_url=settings.OPENAI_BASE_URL,
+        model=settings.OPENAI_MODEL,
         temperature=0.7,
     )
     chain = prompt | llm | parser
@@ -689,7 +690,8 @@ def suggest_ai_plan_customization(request, client_id):
     # Set up the chain
     llm = ChatOpenAI(
         api_key=settings.OPENAI_API_KEY,
-        model="gpt-5.4-mini",
+        base_url=settings.OPENAI_BASE_URL,
+        model=settings.OPENAI_MODEL,
         temperature=0.7,
     )
     chain = prompt | llm | parser
